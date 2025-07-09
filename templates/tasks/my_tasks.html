@@ -758,51 +758,72 @@ const TaskManager = {
     },
 
     toggleTaskStatus(taskId) {
-        if (!confirm('هل تريد تغيير حالة المهمة؟')) return;
-        
-        const csrfToken = this.getCSRFToken();
-        
-        if (!csrfToken) {
-            console.error('CSRF token not found for toggle status request');
-            this.showToast('error', 'خطأ في التحقق من الأمان');
-            return;
+    if (!confirm('هل تريد تغيير حالة المهمة؟')) return;
+    
+    // Get CSRF token from multiple sources
+    function getCsrfToken() {
+        // Try cookie first
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'csrftoken') {
+                return decodeURIComponent(value);
+            }
         }
         
-        console.log('Sending toggle status request for task:', taskId);
+        // Try meta tag
+        const csrfMeta = document.querySelector('meta[name=csrf-token]');
+        if (csrfMeta) {
+            return csrfMeta.getAttribute('content');
+        }
         
-        $.ajax({
-            url: `/tasks/tasks/${taskId}/toggle-status/`,
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': csrfToken,
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            data: {
-                'csrfmiddlewaretoken': csrfToken
-            },
-            success: function(response) {
-                console.log('Toggle status response:', response);
-                if (response.success) {
-                    this.showToast('success', response.message);
-                    setTimeout(() => window.location.reload(), 1000);
-                } else {
-                    this.showToast('error', response.error || 'حدث خطأ أثناء تحديث الحالة');
-                }
-            }.bind(this),
-            error: function(xhr, status, error) {
-                console.error('Toggle status error:', xhr.status, error);
-                console.error('Response text:', xhr.responseText);
-                if (xhr.status === 403) {
-                    this.showToast('error', 'خطأ في التحقق من الصلاحيات - تم رفض الوصول');
-                } else if (xhr.status === 404) {
-                    this.showToast('error', 'المهمة غير موجودة');
-                } else {
-                    this.showToast('error', 'حدث خطأ أثناء تحديث حالة المهمة');
-                }
-            }.bind(this)
-        });
-    },
+        // Try form input
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfInput) {
+            return csrfInput.value;
+        }
+        
+        return null;
+    }
+    
+    const csrfToken = getCsrfToken();
+    
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        this.showToast('error', 'خطأ في التحقق من الأمان');
+        return;
+    }
+    
+    console.log('Using CSRF token:', csrfToken);
+    
+    $.ajax({
+        url: `/tasks/tasks/${taskId}/toggle-status/`,
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+        },
+        data: {
+            'csrfmiddlewaretoken': csrfToken
+        },
+        success: function(response) {
+            if (response.success) {
+                this.showToast('success', response.message);
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                this.showToast('error', response.error || 'حدث خطأ أثناء تحديث الحالة');
+            }
+        }.bind(this),
+        error: function(xhr, status, error) {
+            console.error('Toggle status error:', xhr.status, error);
+            if (xhr.status === 403) {
+                this.showToast('error', 'خطأ في التحقق من الصلاحيات - يرجى إعادة تحميل الصفحة');
+            } else {
+                this.showToast('error', 'حدث خطأ أثناء تحديث حالة المهمة');
+            }
+        }.bind(this)
+    });
+
 
     showDeleteConfirm(taskId, taskName) {
         const modal = $('#deleteConfirmModal');
