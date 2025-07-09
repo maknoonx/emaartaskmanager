@@ -13,6 +13,14 @@ DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = ['*']
 
+# CSRF settings
+CSRF_COOKIE_SECURE = False  # Set to True when using HTTPS
+CSRF_COOKIE_HTTPONLY = False  # Must be False for JavaScript access
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_USE_SESSIONS = False
+CSRF_COOKIE_NAME = 'csrftoken'
+
+
 
 # CSRF settings for Railway deployment
 CSRF_TRUSTED_ORIGINS = [
