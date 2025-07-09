@@ -1,0 +1,256 @@
+<div class="modal-header">
+    <h5 class="modal-title">
+        <i class="bx bx-task me-2"></i>
+        {% if form_action == 'edit' %}تعديل المهمة{% else %}إضافة مهمة جديدة{% endif %}
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<form id="taskForm" method="POST" 
+      action="{% if form_action == 'edit' %}{% url 'tasks:edit_task' task.pk %}{% else %}{% url 'tasks:create_task' %}{% endif %}">
+    {% csrf_token %}
+    
+    <div class="modal-body">
+        <!-- Alert container for form errors -->
+        <div class="alert alert-danger d-none" id="formErrorAlert">
+            <ul class="mb-0" id="formErrorList"></ul>
+        </div>
+        
+        <!-- Basic Information Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="text-primary mb-3">
+                    <i class="bx bx-info-circle me-1"></i>
+                    المعلومات الأساسية
+                </h6>
+            </div>
+            
+            <div class="col-12 mb-3">
+                <label class="form-label required">اسم المهمة</label>
+                <input type="text" class="form-control" name="name" 
+                       value="{% if task %}{{ task.name }}{% endif %}" 
+                       placeholder="أدخل اسم المهمة" required>
+                <div class="form-text">اسم واضح ومحدد للمهمة</div>
+            </div>
+            
+            <div class="col-12 mb-3">
+                <label class="form-label">تفاصيل المهمة</label>
+                <textarea class="form-control" name="detail" rows="4" 
+                          placeholder="أدخل وصفاً تفصيلياً للمهمة">{% if task %}{{ task.detail }}{% endif %}</textarea>
+                <div class="form-text">وصف مفصل لمتطلبات وأهداف المهمة</div>
+            </div>
+        </div>
+        
+        <!-- Assignment and Timeline Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="text-primary mb-3">
+                    <i class="bx bx-users me-1"></i>
+                    التعيين والجدولة
+                </h6>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label">المشروع المرتبط</label>
+                <select class="form-select" name="project">
+                    <option value="">اختر المشروع (اختياري)</option>
+                    {% for project in projects %}
+                    <option value="{{ project.pk }}" 
+                            {% if task and task.project_id == project.pk %}selected{% endif %}>
+                        {{ project.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">ربط المهمة بمشروع معين</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label">مُعيّن إلى</label>
+                <select class="form-select" name="assigned_to">
+                    <option value="">مهمة شخصية</option>
+                    {% for employee in employees %}
+                    <option value="{{ employee.pk }}" 
+                            {% if task and task.assigned_to_id == employee.pk %}selected{% endif %}>
+                        {{ employee.name }} - {{ employee.job_title }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">تعيين المهمة لموظف آخر أو تركها كمهمة شخصية</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label">تاريخ الانتهاء</label>
+                <input type="date" class="form-control" name="due_date" 
+                       value="{% if task and task.due_date %}{{ task.due_date|date:'Y-m-d' }}{% endif %}"
+                       min="{{ today|date:'Y-m-d' }}">
+                <div class="form-text">التاريخ المتوقع لإنجاز المهمة</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label">حالة المهمة</label>
+                <select class="form-select" name="status">
+                    {% for value, label in status_choices %}
+                    <option value="{{ value }}" 
+                            {% if task and task.status == value %}selected{% elif not task and value == 'new' %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">الحالة الحالية للمهمة</div>
+            </div>
+        </div>
+        
+        <!-- Additional Information Section (for edit mode) -->
+        {% if form_action == 'edit' and task %}
+        <div class="row">
+            <div class="col-12">
+                <h6 class="text-primary mb-3">
+                    <i class="bx bx-info-circle me-1"></i>
+                    معلومات إضافية
+                </h6>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label text-muted">منشئ المهمة</label>
+                <div class="form-control-plaintext">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-sm me-2">
+                            {% if task.created_by.profile_picture %}
+                            <img src="{{ task.created_by.profile_picture.url }}" alt="{{ task.created_by.name }}" class="rounded-circle">
+                            {% else %}
+                            <span class="avatar-initial rounded-circle bg-label-info">
+                                {{ task.created_by.name|first|upper }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="fw-semibold">{{ task.created_by.name }}</div>
+                            <small class="text-muted">{{ task.created_by.job_title }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label text-muted">تاريخ الإنشاء</label>
+                <div class="form-control-plaintext">
+                    <i class="bx bx-calendar me-1"></i>
+                    {{ task.created_at|date:"d/m/Y H:i" }}
+                </div>
+            </div>
+            
+            {% if task.is_overdue %}
+            <div class="col-12 mb-3">
+                <div class="alert alert-warning">
+                    <i class="bx bx-error-circle me-2"></i>
+                    <strong>تنبيه:</strong> هذه المهمة متأخرة عن الموعد المحدد بـ {{ task.days_remaining|add:"-1" }} يوم.
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            إلغاء
+        </button>
+        <button type="submit" class="btn btn-primary" id="saveTaskBtn">
+            <span class="btn-text">
+                {% if form_action == 'edit' %}
+                <i class="bx bx-save me-1"></i>حفظ التغييرات
+                {% else %}
+                <i class="bx bx-plus me-1"></i>إضافة المهمة
+                {% endif %}
+            </span>
+            <span class="spinner-border spinner-border-sm d-none" role="status">
+                <span class="visually-hidden">جاري الحفظ...</span>
+            </span>
+        </button>
+    </div>
+</form>
+
+<script>
+$(document).ready(function() {
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    $('input[name="due_date"]').attr('min', today);
+    
+    // Dynamic status change handling
+    $('select[name="status"]').on('change', function() {
+        const status = $(this).val();
+        const dueDateField = $('input[name="due_date"]');
+        
+        if (status === 'finished') {
+            dueDateField.closest('.mb-3').find('.form-text').text('تاريخ الانتهاء الفعلي (اختياري)');
+        } else {
+            dueDateField.closest('.mb-3').find('.form-text').text('التاريخ المتوقع لإنجاز المهمة');
+        }
+    });
+    
+    // Auto-assign to self if assigning to others
+    $('select[name="assigned_to"]').on('change', function() {
+        const assignedTo = $(this).val();
+        const projectField = $('select[name="project"]');
+        
+        if (assignedTo) {
+            // If assigning to someone else, suggest linking to a project
+            if (projectField.val() === '') {
+                projectField.focus();
+            }
+        }
+    });
+    
+    // Form validation enhancements
+    $('#taskForm').on('submit', function(e) {
+        const taskName = $('input[name="name"]').val().trim();
+        const dueDate = $('input[name="due_date"]').val();
+        const status = $('select[name="status"]').val();
+        
+        if (status !== 'finished' && dueDate) {
+            const dueDateObj = new Date(dueDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (dueDateObj < today) {
+                e.preventDefault();
+                alert('تاريخ الانتهاء يجب أن يكون في المستقبل');
+                $('input[name="due_date"]').focus();
+                return false;
+            }
+        }
+        
+        if (taskName.length < 3) {
+            e.preventDefault();
+            alert('اسم المهمة يجب أن يكون 3 أحرف على الأقل');
+            $('input[name="name"]').focus();
+            return false;
+        }
+    });
+    
+    // Real-time character counter for details
+    $('textarea[name="detail"]').on('input', function() {
+        const maxLength = 500;
+        const currentLength = $(this).val().length;
+        const remaining = maxLength - currentLength;
+        
+        let helpText = $(this).closest('.mb-3').find('.form-text');
+        if (currentLength > 0) {
+            helpText.text(`${remaining} حرف متبقي من ${maxLength}`);
+            if (remaining < 50) {
+                helpText.addClass('text-warning');
+            } else {
+                helpText.removeClass('text-warning');
+            }
+        } else {
+            helpText.text('وصف مفصل لمتطلبات وأهداف المهمة');
+            helpText.removeClass('text-warning');
+        }
+    });
+    
+    // Focus on first input
+    setTimeout(() => {
+        $('input[name="name"]').focus();
+    }, 100);
+});
+</script>

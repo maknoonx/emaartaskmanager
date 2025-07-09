@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>التقرير الشهري - {{ employee.name }} - {{ report_date }}</title>
+    
+    <!-- Arabic Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/boxicons/2.1.4/css/boxicons.min.css">
+    
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/monthly_reports_print.css' %}">
+</head>
+<body>
+    <div class="print-container">
+        <!-- Header Section -->
+        <header class="report-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="{% static 'img/logo.png' %}" alt="جمعية إعمار" class="company-logo">
+                </div>
+                <div class="company-info">
+                    <h1 class="company-name">جمعية إعمار</h1>
+                </div>
+                <div class="report-info">
+                    <h2 class="report-title">التقرير الشهري للمهام</h2>
+                    <p class="report-period">{{ report_date }}</p>
+                    <p class="print-date">تاريخ الطباعة: {{ print_date }}</p>
+                </div>
+            </div>
+            <div class="header-divider"></div>
+        </header>
+
+        <!-- Employee Information Section -->
+        <section class="employee-section">
+            <h3 class="section-title">
+                <i class="bx bx-user"></i>
+                بيانات الموظف
+            </h3>
+            <div class="employee-info-grid">
+                <div class="info-item">
+                    <span class="info-label">الاسم:</span>
+                    <span class="info-value">{{ employee.name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">المسمى الوظيفي:</span>
+                    <span class="info-value">{{ employee.job_title }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">القسم:</span>
+                    <span class="info-value">{{ employee.get_section_display_arabic }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">الرقم الوظيفي:</span>
+                    <span class="info-value">{{ employee.job_number }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">البريد الإلكتروني:</span>
+                    <span class="info-value">{{ employee.email }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">رقم الجوال:</span>
+                    <span class="info-value">{{ employee.mobile_number }}</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Performance Summary Section -->
+        <section class="summary-section">
+            <h3 class="section-title">
+                <i class="bx bx-chart"></i>
+                ملخص الأداء
+            </h3>
+            <div class="stats-grid">
+                <div class="stat-card stat-primary">
+                    <div class="stat-icon">
+                        <i class="bx bx-plus-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ stats.total_created }}</div>
+                        <div class="stat-label">مهام جديدة</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-success">
+                    <div class="stat-icon">
+                        <i class="bx bx-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ stats.total_completed }}</div>
+                        <div class="stat-label">مهام مكتملة</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-warning">
+                    <div class="stat-icon">
+                        <i class="bx bx-time"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ stats.total_overdue }}</div>
+                        <div class="stat-label">مهام متأخرة</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-info">
+                    <div class="stat-icon">
+                        <i class="bx bx-percentage"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ stats.completion_rate }}%</div>
+                        <div class="stat-label">نسبة الإنجاز</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Monthly Goals Section -->
+        {% if monthly_goals %}
+        <section class="goals-section">
+            <h3 class="section-title">
+                <i class="bx bx-target-lock"></i>
+                أهداف الشهر
+            </h3>
+            {% for goal in monthly_goals %}
+            <div class="goal-card">
+                <div class="goal-header">
+                    <h4 class="goal-title">أهداف {{ goal.month_name }} {{ goal.year }}</h4>
+                    <span class="goal-count">{{ goal.goals_count }} هدف</span>
+                </div>
+                <div class="goal-content">
+                    <pre class="goal-text">{{ goal.goals }}</pre>
+                </div>
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+
+        <!-- Completed Tasks Section -->
+        {% if tasks_completed %}
+        <section class="tasks-section">
+            <h3 class="section-title">
+                <i class="bx bx-check-circle"></i>
+                المهام المكتملة ({{ stats.total_completed }})
+            </h3>
+            <div class="tasks-table">
+                <table class="task-table">
+                    <thead>
+                        <tr>
+                            <th class="task-number">#</th>
+                            <th class="task-name">اسم المهمة</th>
+                            <th class="task-project">المشروع</th>
+                            <th class="task-date">تاريخ الإكمال</th>
+                            <th class="task-status">الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in tasks_completed %}
+                        <tr>
+                            <td class="task-number">{{ forloop.counter }}</td>
+                            <td class="task-name">
+                                <div class="task-name-content">
+                                    <span class="task-title">{{ task.name }}</span>
+                                    {% if task.detail %}
+                                    <small class="task-description">{{ task.detail|truncatewords:15 }}</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="task-project">
+                                {% if task.project %}
+                                {{ task.project.name }}
+                                {% else %}
+                                <span class="no-project">بدون مشروع</span>
+                                {% endif %}
+                            </td>
+                            <td class="task-date">{{ task.updated_at|date:"d/m/Y" }}</td>
+                            <td class="task-status">
+                                <span class="status-badge status-completed">مكتمل</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Overdue Tasks Section -->
+        {% if overdue_tasks %}
+        <section class="tasks-section overdue-section">
+            <h3 class="section-title">
+                <i class="bx bx-time"></i>
+                المهام المتأخرة ({{ stats.total_overdue }})
+            </h3>
+            <div class="tasks-table">
+                <table class="task-table">
+                    <thead>
+                        <tr>
+                            <th class="task-number">#</th>
+                            <th class="task-name">اسم المهمة</th>
+                            <th class="task-project">المشروع</th>
+                            <th class="task-date">تاريخ الاستحقاق</th>
+                            <th class="task-status">الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in overdue_tasks %}
+                        <tr>
+                            <td class="task-number">{{ forloop.counter }}</td>
+                            <td class="task-name">
+                                <div class="task-name-content">
+                                    <span class="task-title">{{ task.name }}</span>
+                                    {% if task.detail %}
+                                    <small class="task-description">{{ task.detail|truncatewords:15 }}</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="task-project">
+                                {% if task.project %}
+                                {{ task.project.name }}
+                                {% else %}
+                                <span class="no-project">بدون مشروع</span>
+                                {% endif %}
+                            </td>
+                            <td class="task-date">{{ task.due_date|date:"d/m/Y" }}</td>
+                            <td class="task-status">
+                                <span class="status-badge status-overdue">متأخر</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- No Data Message -->
+        {% if not tasks_completed and not overdue_tasks and not monthly_goals %}
+        <section class="no-data-section">
+            <div class="no-data-content">
+                <i class="bx bx-info-circle"></i>
+                <h4>لا توجد بيانات لعرضها</h4>
+                <p>لم يتم العثور على أي مهام أو أهداف للموظف في الشهر المحدد.</p>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Footer Section -->
+        <footer class="report-footer">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <p class="generated-by">تم إنشاء هذا التقرير بواسطة نظام إدارة جمعية إعمار</p>
+                    <p class="print-info">طُبع في: {{ print_date }}</p>
+                </div>
+                <div class="footer-right">
+                    <div class="signature-section">
+                        <div class="signature-line"></div>
+                        <p class="signature-label">توقيع المدير المباشر</p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Auto-print when page loads
+        window.onload = function() {
+            // Small delay to ensure all content is loaded
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        };
+        
+        // Handle after print
+        window.onafterprint = function() {
+            // Optionally close the window after printing
+            // window.close();
+        };
+    </script>
+</body>
+</html>

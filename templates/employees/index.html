@@ -1,0 +1,933 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - جمعية إعمار{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/employees.css' %}" />
+{% endblock %}
+
+{% block content %}
+<!-- Employee Management Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="card-title mb-0">
+                        <i class="bx bx-group me-2"></i>
+                        إدارة الموظفين
+                    </h4>
+                    <p class="text-muted mb-0">إدارة بيانات الموظفين والمستخدمين</p>
+                </div>
+                <button type="button" class="btn btn-primary" id="addEmployeeBtn">
+                    <i class="bx bx-plus me-1"></i>
+                    إضافة موظف جديد
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 col-sm-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar flex-shrink-0 me-3">
+                        <span class="avatar-initial rounded bg-label-primary">
+                            <i class="bx bx-group"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">{{ total_employees }}</h5>
+                        <small class="text-muted">إجمالي الموظفين</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 col-sm-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar flex-shrink-0 me-3">
+                        <span class="avatar-initial rounded bg-label-success">
+                            <i class="bx bx-check-circle"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">{{ active_employees }}</h5>
+                        <small class="text-muted">الموظفين النشطين</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 col-sm-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar flex-shrink-0 me-3">
+                        <span class="avatar-initial rounded bg-label-warning">
+                            <i class="bx bx-pause-circle"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">{{ inactive_employees }}</h5>
+                        <small class="text-muted">الموظفين غير النشطين</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 col-sm-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar flex-shrink-0 me-3">
+                        <span class="avatar-initial rounded bg-label-info">
+                            <i class="bx bx-briefcase"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">{{ section_choices|length }}</h5>
+                        <small class="text-muted">الأقسام المتاحة</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" class="row g-3" id="filterForm">
+                    <div class="col-md-4">
+                        <label class="form-label">البحث</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="search" 
+                                   value="{{ search_query }}" 
+                                   placeholder="ابحث بالاسم، البريد، الرقم الوظيفي...">
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="bx bx-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">القسم</label>
+                        <select class="form-select" name="section">
+                            <option value="">جميع الأقسام</option>
+                            {% for value, label in section_choices %}
+                            <option value="{{ value }}" {% if section_filter == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">الحالة</label>
+                        <select class="form-select" name="status">
+                            <option value="">جميع الحالات</option>
+                            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>نشط</option>
+                            <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>غير نشط</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">تطبيق</button>
+                        <a href="{% url 'employees:index' %}" class="btn btn-outline-secondary">إعادة تعيين</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Employees Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">قائمة الموظفين</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if page_obj %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>الصورة</th>
+                                <th>الاسم</th>
+                                <th>الرقم الوظيفي</th>
+                                <th>المسمى الوظيفي</th>
+                                <th>القسم</th>
+                                <th>البريد الإلكتروني</th>
+                                <th>رقم الجوال</th>
+                                <th>الحالة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for employee in page_obj %}
+                            <tr>
+                                <td>
+                                    <div class="avatar avatar-sm">
+                                        {% if employee.profile_picture %}
+                                        <img src="{{ employee.profile_picture.url }}" alt="{{ employee.name }}" class="rounded-circle">
+                                        {% else %}
+                                        <span class="avatar-initial rounded-circle bg-label-primary">
+                                            {{ employee.name|first|upper }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-semibold">{{ employee.name }}</span>
+                                        <small class="text-muted">{{ employee.username }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-label-info">{{ employee.job_number }}</span>
+                                </td>
+                                <td>{{ employee.job_title }}</td>
+                                <td>
+                                    <span class="badge bg-label-secondary">{{ employee.get_section_display_arabic }}</span>
+                                </td>
+                                <td>
+                                    <a href="mailto:{{ employee.email }}" class="text-primary">
+                                        {{ employee.email }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="tel:{{ employee.get_full_mobile }}" class="text-primary">
+                                        {{ employee.mobile_number }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if employee.is_active_employee %}
+                                    <span class="badge bg-label-success">نشط</span>
+                                    {% else %}
+                                    <span class="badge bg-label-warning">غير نشط</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" 
+                                                data-bs-toggle="dropdown">
+                                            الإجراءات
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <a class="dropdown-item employee-detail-btn" 
+                                               href="#" data-employee-id="{{ employee.pk }}">
+                                                <i class="bx bx-show me-1"></i>
+                                                عرض التفاصيل
+                                            </a>
+                                            <a class="dropdown-item employee-edit-btn" 
+                                               href="#" data-employee-id="{{ employee.pk }}">
+                                                <i class="bx bx-edit me-1"></i>
+                                                تعديل
+                                            </a>
+                                            <a class="dropdown-item employee-toggle-status-btn" 
+                                               href="#" data-employee-id="{{ employee.pk }}" 
+                                               data-current-status="{{ employee.is_active_employee }}">
+                                                <i class="bx bx-refresh me-1"></i>
+                                                {% if employee.is_active_employee %}إلغاء تفعيل{% else %}تفعيل{% endif %}
+                                            </a>
+                                            <div class="dropdown-divider"></div>
+                                            <a class="dropdown-item text-danger employee-delete-btn" 
+                                               href="#" data-employee-id="{{ employee.pk }}" 
+                                               data-employee-name="{{ employee.name }}"
+                                               data-can-delete="{{ employee.can_be_deleted }}">
+                                                <i class="bx bx-trash me-1"></i>
+                                                حذف
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <div class="card-footer">
+                    <nav aria-label="Employee pagination">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if section_filter %}&section={{ section_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                        <i class="bx bx-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if section_filter %}&section={{ section_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if section_filter %}&section={{ section_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                        <i class="bx bx-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+                
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="avatar avatar-xl mx-auto mb-3">
+                        <span class="avatar-initial rounded bg-label-secondary">
+                            <i class="bx bx-group bx-lg"></i>
+                        </span>
+                    </div>
+                    <h5 class="mb-2">لا توجد موظفين</h5>
+                    <p class="text-muted mb-4">لم يتم العثور على أي موظفين بناءً على معايير البحث المحددة</p>
+                    <button type="button" class="btn btn-primary" id="addFirstEmployeeBtn">
+                        <i class="bx bx-plus me-1"></i>
+                        إضافة أول موظف
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Employee Form Modal -->
+<div class="modal fade" id="employeeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <!-- Modal content will be loaded here via AJAX -->
+        </div>
+    </div>
+</div>
+
+<!-- Employee Detail Modal -->
+<div class="modal fade" id="employeeDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <!-- Modal content will be loaded here via AJAX -->
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <div class="avatar avatar-xl mx-auto mb-3">
+                        <span class="avatar-initial rounded bg-label-danger">
+                            <i class="bx bx-trash bx-lg"></i>
+                        </span>
+                    </div>
+                    <h5 class="mb-2">هل أنت متأكد؟</h5>
+                    <p class="text-muted mb-4" id="deleteConfirmText">
+                        هل تريد حذف الموظف؟ لن يمكن التراجع عن هذا الإجراء.
+                    </p>
+                    <div class="alert alert-danger d-none" id="deleteBlockersAlert">
+                        <h6 class="alert-heading">لا يمكن حذف الموظف!</h6>
+                        <p class="mb-0" id="deleteBlockersText"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/**
+ * Employee Management JavaScript - Inline Version
+ * Handles all employee-related functionality including CRUD operations
+ */
+
+const EmployeeManager = {
+    // Configuration
+    config: {
+        toastDuration: 3000,
+        confirmationTimeout: 5000,
+        apiHeaders: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    },
+
+    // Initialize the employee manager
+    init() {
+        this.bindEvents();
+        this.initializeTooltips();
+        this.setupCSRFToken();
+    },
+
+    // Bind all event listeners
+    bindEvents() {
+        // Prevent default form submissions for AJAX handling
+        $(document).on('submit', '#employeeForm', this.handleFormSubmit.bind(this));
+        
+        // Handle modal cleanup
+        $('#employeeModal, #employeeDetailModal').on('hidden.bs.modal', this.cleanupModal.bind(this));
+        
+        // Handle delete confirmation
+        $('#confirmDeleteBtn').on('click', this.confirmDelete.bind(this));
+        
+        // Handle status toggle confirmation
+        $(document).on('click', '.employee-toggle-status-btn', this.handleStatusToggle.bind(this));
+        
+        // Handle search form auto-submit
+        $('#filterForm input[name="search"]').on('keyup', this.debounce(this.autoSearch.bind(this), 500));
+        
+        // Handle keyboard shortcuts
+        $(document).on('keydown', this.handleKeyboardShortcuts.bind(this));
+    },
+
+    // Setup CSRF token for AJAX requests
+    setupCSRFToken() {
+        const csrfToken = $('[name=csrfmiddlewaretoken]').val();
+        if (csrfToken) {
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    if (!this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                    }
+                }
+            });
+        }
+    },
+
+    // Initialize tooltips
+    initializeTooltips() {
+        // Check if Bootstrap tooltips are available before initializing
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            // Initialize Bootstrap 5 tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        } else if ($.fn.tooltip) {
+            // Fallback to jQuery tooltip if available
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        }
+        // If no tooltip library is available, silently continue without tooltips
+    },
+
+    // Show add employee form
+    showAddForm() {
+        this.loadModal('/employees/create/', '#employeeModal', 'إضافة موظف جديد');
+    },
+
+    // Show edit employee form
+    showEditForm(employeeId) {
+        this.loadModal(`/employees/${employeeId}/edit/`, '#employeeModal', 'تعديل الموظف');
+    },
+
+    // Show employee details
+    showDetail(employeeId) {
+        this.loadModal(`/employees/${employeeId}/`, '#employeeDetailModal', 'تفاصيل الموظف');
+    },
+
+    // Load modal content via AJAX
+    loadModal(url, modalSelector, title) {
+        const modal = $(modalSelector);
+        const modalContent = modal.find('.modal-content');
+        
+        // Show loading state
+        modalContent.html(this.getLoadingHTML(title));
+        modal.modal('show');
+        
+        // Load content
+        $.ajax({
+            url: url,
+            method: 'GET',
+            headers: this.config.apiHeaders,
+            success: function(response) {
+                modalContent.html(response);
+                // Re-initialize any JavaScript components in the loaded content
+                this.initializeModalComponents();
+            }.bind(this),
+            error: function(xhr, status, error) {
+                modalContent.html(this.getErrorHTML('حدث خطأ أثناء تحميل البيانات'));
+                this.showToast('error', 'فشل تحميل البيانات');
+            }.bind(this)
+        });
+    },
+
+    // Handle form submission
+    handleFormSubmit(e) {
+        e.preventDefault();
+        
+        const form = $(e.target);
+        const submitBtn = form.find('button[type="submit"]');
+        const btnText = submitBtn.find('.btn-text');
+        const spinner = submitBtn.find('.spinner-border');
+        
+        // Validate form
+        if (!this.validateForm(form)) {
+            return;
+        }
+        
+        // Show loading state
+        this.setLoadingState(submitBtn, btnText, spinner, true);
+        
+        // Submit form
+        $.ajax({
+            url: form.attr('action'),
+            method: 'POST',
+            data: form.serialize(),
+            headers: this.config.apiHeaders,
+            success: function(response) {
+                if (response.success) {
+                    this.showToast('success', response.message);
+                    this.closeModal();
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    this.showFormErrors(response.error || response.errors);
+                }
+            }.bind(this),
+            error: function(xhr) {
+                const errorMessage = this.parseErrorResponse(xhr);
+                this.showFormErrors(errorMessage);
+            }.bind(this),
+            complete: function() {
+                this.setLoadingState(submitBtn, btnText, spinner, false);
+            }.bind(this)
+        });
+    },
+
+    // Validate form before submission
+    validateForm(form) {
+        let isValid = true;
+        const errors = [];
+        
+        // Check required fields
+        form.find('[required]').each(function() {
+            const field = $(this);
+            const value = field.val().trim();
+            
+            if (!value) {
+                const label = field.closest('.mb-3').find('label').text().replace(' *', '');
+                errors.push(`الحقل "${label}" مطلوب`);
+                field.addClass('is-invalid');
+                isValid = false;
+            } else {
+                field.removeClass('is-invalid');
+            }
+        });
+        
+        // Validate email format
+        const emailField = form.find('input[name="email"]');
+        if (emailField.length && emailField.val()) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(emailField.val())) {
+                errors.push('تنسيق البريد الإلكتروني غير صحيح');
+                emailField.addClass('is-invalid');
+                isValid = false;
+            }
+        }
+        
+        // Validate mobile number format
+        const mobileField = form.find('input[name="mobile_number"]');
+        if (mobileField.length && mobileField.val()) {
+            const mobileRegex = /^(\+?966[0-9]{9}|05[0-9]{8})$/;
+            if (!mobileRegex.test(mobileField.val())) {
+                errors.push('تنسيق رقم الجوال غير صحيح (مثال: 0501234567)');
+                mobileField.addClass('is-invalid');
+                isValid = false;
+            }
+        }
+        
+        // Show validation errors
+        if (!isValid) {
+            this.showFormErrors(errors);
+        }
+        
+        return isValid;
+    },
+
+    // Show form validation errors
+    showFormErrors(errors) {
+        const errorAlert = $('#formErrorAlert');
+        const errorList = $('#formErrorList');
+        
+        if (typeof errors === 'string') {
+            errors = [errors];
+        }
+        
+        if (errors && errors.length > 0) {
+            const errorItems = errors.map(error => `<li>${error}</li>`).join('');
+            errorList.html(errorItems);
+            errorAlert.removeClass('d-none');
+            
+            // Scroll to error alert
+            errorAlert[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    },
+
+    // Handle status toggle
+    handleStatusToggle(e) {
+        e.preventDefault();
+        
+        const btn = $(e.currentTarget);
+        const employeeId = btn.data('employee-id');
+        const currentStatus = btn.data('current-status');
+        const newStatus = currentStatus ? 'إلغاء تفعيل' : 'تفعيل';
+        
+        // Show confirmation
+        const confirmed = confirm(`هل تريد ${newStatus} الموظف؟`);
+        if (!confirmed) return;
+        
+        // Show loading state
+        const originalText = btn.html();
+        btn.html('<i class="bx bx-loader-alt bx-spin me-1"></i>جاري التحديث...');
+        btn.prop('disabled', true);
+        
+        // Send request
+        $.ajax({
+            url: `/employees/${employeeId}/toggle-status/`,
+            method: 'POST',
+            headers: this.config.apiHeaders,
+            success: function(response) {
+                if (response.success) {
+                    this.showToast('success', response.message);
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    this.showToast('error', response.error || 'حدث خطأ أثناء تحديث الحالة');
+                }
+            }.bind(this),
+            error: function() {
+                this.showToast('error', 'حدث خطأ أثناء تحديث الحالة');
+            }.bind(this),
+            complete: function() {
+                btn.html(originalText);
+                btn.prop('disabled', false);
+            }
+        });
+    },
+
+    // Show delete confirmation modal
+    showDeleteConfirm(employeeId, employeeName, canDelete) {
+        const modal = $('#deleteConfirmModal');
+        const confirmBtn = $('#confirmDeleteBtn');
+        const confirmText = $('#deleteConfirmText');
+        const blockersAlert = $('#deleteBlockersAlert');
+        const blockersText = $('#deleteBlockersText');
+        
+        // Set employee data
+        confirmBtn.data('employee-id', employeeId);
+        confirmText.text(`هل تريد حذف الموظف "${employeeName}"؟ لن يمكن التراجع عن هذا الإجراء.`);
+        
+        if (canDelete === false || canDelete === 'false') {
+            // Employee cannot be deleted - show blockers
+            confirmBtn.hide();
+            blockersAlert.removeClass('d-none');
+            blockersText.text('الموظف مرتبط ببيانات أخرى في النظام ولا يمكن حذفه.');
+        } else {
+            // Employee can be deleted
+            confirmBtn.show();
+            blockersAlert.addClass('d-none');
+        }
+        
+        modal.modal('show');
+    },
+
+    // Confirm delete action
+    confirmDelete() {
+        const btn = $('#confirmDeleteBtn');
+        const employeeId = btn.data('employee-id');
+        
+        if (!employeeId) return;
+        
+        // Show loading state
+        const originalText = btn.html();
+        btn.html('<span class="spinner-border spinner-border-sm me-1"></span>جاري الحذف...');
+        btn.prop('disabled', true);
+        
+        // Send delete request
+        $.ajax({
+            url: `/employees/${employeeId}/delete/`,
+            method: 'POST',
+            headers: this.config.apiHeaders,
+            success: function(response) {
+                if (response.success) {
+                    this.showToast('success', response.message);
+                    $('#deleteConfirmModal').modal('hide');
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    this.showToast('error', response.error || 'حدث خطأ أثناء الحذف');
+                }
+            }.bind(this),
+            error: function() {
+                this.showToast('error', 'حدث خطأ أثناء حذف الموظف');
+            }.bind(this),
+            complete: function() {
+                btn.html(originalText);
+                btn.prop('disabled', false);
+            }
+        });
+    },
+
+    // Auto-search functionality
+    autoSearch() {
+        $('#filterForm').submit();
+    },
+
+    // Handle keyboard shortcuts
+    handleKeyboardShortcuts(e) {
+        // Ctrl+N or Cmd+N: Add new employee
+        if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault();
+            this.showAddForm();
+        }
+        
+        // Escape: Close modals
+        if (e.key === 'Escape') {
+            $('.modal.show').modal('hide');
+        }
+    },
+
+    // Set loading state for buttons
+    setLoadingState(btn, btnText, spinner, isLoading) {
+        if (isLoading) {
+            btn.prop('disabled', true);
+            btnText.addClass('d-none');
+            spinner.removeClass('d-none');
+        } else {
+            btn.prop('disabled', false);
+            btnText.removeClass('d-none');
+            spinner.addClass('d-none');
+        }
+    },
+
+    // Close active modal
+    closeModal() {
+        $('.modal.show').modal('hide');
+    },
+
+    // Clean up modal content
+    cleanupModal() {
+        // Clear form errors
+        $('#formErrorAlert').addClass('d-none');
+        $('.is-invalid').removeClass('is-invalid');
+        
+        // Reset form fields
+        $('#employeeForm')[0]?.reset();
+        
+        // Clear modal content after animation
+        setTimeout(() => {
+            $('.modal-content').empty();
+        }, 300);
+    },
+
+    // Initialize components in loaded modal content
+    initializeModalComponents() {
+        // Re-initialize tooltips
+        this.initializeTooltips();
+        
+        // Focus first input
+        setTimeout(() => {
+            $('.modal.show').find('input:first').focus();
+        }, 100);
+    },
+
+    // Show toast notification
+    showToast(type, message) {
+        // Remove existing toasts
+        $('.toast-container').remove();
+        
+        const toastClass = type === 'success' ? 'bg-success' : 'bg-danger';
+        const iconClass = type === 'success' ? 'bx-check' : 'bx-x';
+        
+        const toastHTML = `
+            <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+                <div class="toast show ${toastClass} text-white" role="alert">
+                    <div class="toast-header ${toastClass} text-white border-0">
+                        <i class="bx ${iconClass} me-2"></i>
+                        <strong class="me-auto">${type === 'success' ? 'نجح' : 'خطأ'}</strong>
+                        <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('body').append(toastHTML);
+        
+        // Auto-hide toast
+        setTimeout(() => {
+            $('.toast-container').fadeOut(300, function() {
+                $(this).remove();
+            });
+        }, this.config.toastDuration);
+    },
+
+    // Get loading HTML for modals
+    getLoadingHTML(title) {
+        return `
+            <div class="modal-header">
+                <h5 class="modal-title">${title}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">جاري التحميل...</span>
+                </div>
+                <p class="text-muted">جاري تحميل البيانات...</p>
+            </div>
+        `;
+    },
+
+    // Get error HTML for modals
+    getErrorHTML(message) {
+        return `
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">خطأ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <div class="avatar avatar-xl mx-auto mb-3">
+                    <span class="avatar-initial rounded bg-label-danger">
+                        <i class="bx bx-error bx-lg"></i>
+                    </span>
+                </div>
+                <h6 class="mb-2">حدث خطأ</h6>
+                <p class="text-muted mb-4">${message}</p>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        `;
+    },
+
+    // Parse error response from server
+    parseErrorResponse(xhr) {
+        let errorMessage = 'حدث خطأ غير متوقع';
+        
+        if (xhr.responseJSON) {
+            if (xhr.responseJSON.error) {
+                errorMessage = xhr.responseJSON.error;
+            } else if (xhr.responseJSON.errors) {
+                if (Array.isArray(xhr.responseJSON.errors)) {
+                    errorMessage = xhr.responseJSON.errors.join(', ');
+                } else {
+                    errorMessage = Object.values(xhr.responseJSON.errors).join(', ');
+                }
+            }
+        } else if (xhr.status === 400) {
+            errorMessage = 'البيانات المدخلة غير صحيحة';
+        } else if (xhr.status === 403) {
+            errorMessage = 'ليس لديك صلاحية لتنفيذ هذا الإجراء';
+        } else if (xhr.status === 404) {
+            errorMessage = 'الموظف المطلوب غير موجود';
+        } else if (xhr.status === 500) {
+            errorMessage = 'خطأ في الخادم، يرجى المحاولة لاحقاً';
+        }
+        
+        return errorMessage;
+    },
+
+    // Debounce function for search
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+};
+
+// Initialize when document is ready
+$(document).ready(function() {
+    // Initialize Employee Manager
+    EmployeeManager.init();
+    
+    // Auto-submit filter form on select change
+    $('#filterForm select').on('change', function() {
+        $('#filterForm').submit();
+    });
+    
+    // Handle add employee button clicks
+    $('#addEmployeeBtn, #addFirstEmployeeBtn').on('click', function() {
+        EmployeeManager.showAddForm();
+    });
+    
+    // Handle employee detail view
+    $(document).on('click', '.employee-detail-btn', function(e) {
+        e.preventDefault();
+        const employeeId = $(this).data('employee-id');
+        EmployeeManager.showDetail(employeeId);
+    });
+    
+    // Handle employee edit
+    $(document).on('click', '.employee-edit-btn', function(e) {
+        e.preventDefault();
+        const employeeId = $(this).data('employee-id');
+        EmployeeManager.showEditForm(employeeId);
+    });
+    
+    // Handle employee status toggle
+    $(document).on('click', '.employee-toggle-status-btn', function(e) {
+        e.preventDefault();
+        const employeeId = $(this).data('employee-id');
+        const currentStatus = $(this).data('current-status');
+        EmployeeManager.toggleStatus(employeeId, currentStatus);
+    });
+    
+    // Handle employee delete
+    $(document).on('click', '.employee-delete-btn', function(e) {
+        e.preventDefault();
+        const employeeId = $(this).data('employee-id');
+        const employeeName = $(this).data('employee-name');
+        const canDelete = $(this).data('can-delete');
+        EmployeeManager.showDeleteConfirm(employeeId, employeeName, canDelete);
+    });
+    
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', function(e) {
+        if ($('.modal.show').length > 0) {
+            $('.modal.show').modal('hide');
+        }
+    });
+    
+    // Prevent form resubmission on page refresh
+    if (window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.href);
+    }
+});
+
+// Make EmployeeManager globally accessible
+window.EmployeeManager = EmployeeManager;
+</script>
+{% endblock %}

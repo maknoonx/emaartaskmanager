@@ -1,0 +1,679 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - جمعية إعمار{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/projects.css' %}" />
+{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'dashboard:dashboard' %}">الرئيسية</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'tasks:projects' %}">المشاريع</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">{{ project.name }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- Project Header Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="project-detail-header">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h3 class="project-detail-title mb-2">{{ project.name }}</h3>
+                        <div class="project-detail-meta">
+                            <span class="project-status-badge status-{{ project.status }}">
+                                {{ project.get_status_display_arabic }}
+                            </span>
+                            {% if project.due_date %}
+                            <span class="due-date-indicator {% if project.is_overdue %}overdue{% elif project.days_remaining <= 7 %}due-soon{% else %}normal{% endif %}">
+                                <i class="bx bx-calendar"></i>
+                                {% if project.is_overdue %}
+                                متأخر {{ project.days_remaining|add:"-1" }} يوم
+                                {% elif project.days_remaining == 0 %}
+                                ينتهي اليوم
+                                {% elif project.days_remaining == 1 %}
+                                ينتهي غداً
+                                {% else %}
+                                {{ project.days_remaining }} يوم متبقي
+                                {% endif %}
+                            </span>
+                            {% endif %}
+                            <span>
+                                <i class="bx bx-chart"></i>
+                                {{ project.progress_percentage }}% مكتمل
+                            </span>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-light project-edit-btn" 
+                                data-project-id="{{ project.pk }}">
+                            <i class="bx bx-edit me-1"></i>
+                            تعديل
+                        </button>
+                        {% if can_delete %}
+                        <button type="button" class="btn btn-outline-light project-delete-btn" 
+                                data-project-id="{{ project.pk }}" 
+                                data-project-name="{{ project.name }}"
+                                data-can-delete="true">
+                            <i class="bx bx-trash me-1"></i>
+                            حذف
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alerts and Warnings -->
+{% if project.is_overdue %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-danger">
+            <h6 class="alert-heading">
+                <i class="bx bx-error-circle me-1"></i>
+                مشروع متأخر!
+            </h6>
+            <p class="mb-2">هذا المشروع متأخر عن الموعد المحدد بـ {{ project.days_remaining|add:"-1" }} يوم.</p>
+            <hr>
+            <p class="mb-0">يرجى متابعة الموظف المُعيّن لتسريع إنجاز المشروع.</p>
+        </div>
+    </div>
+</div>
+{% elif project.days_remaining <= 7 and project.days_remaining > 0 %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-warning">
+            <h6 class="alert-heading">
+                <i class="bx bx-time me-1"></i>
+                مشروع قريب الانتهاء
+            </h6>
+            <p class="mb-0">باقي {{ project.days_remaining }} أيام على انتهاء المشروع. يرجى متابعة التقدم.</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Project Information -->
+<div class="row mb-4">
+    <div class="col-lg-8 mb-4">
+        <!-- Project Description -->
+        {% if project.description %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bx bx-file-text me-2"></i>
+                    وصف المشروع
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ project.description|linebreaks }}</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Project Tasks Section -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bx bx-task me-2"></i>
+                    مهام المشروع
+                </h5>
+                <button type="button" class="btn btn-sm btn-outline-primary" disabled>
+                    <i class="bx bx-plus me-1"></i>
+                    إضافة مهمة
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="project-tasks-section text-center py-5">
+                    <div class="avatar avatar-xl mx-auto mb-3">
+                        <span class="avatar-initial rounded bg-label-info">
+                            <i class="bx bx-info-circle bx-lg"></i>
+                        </span>
+                    </div>
+                    <h6 class="mb-2">قريباً...</h6>
+                    <p class="text-muted mb-0">سيتم إضافة قسم إدارة المهام في المستقبل</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Project Details Sidebar -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bx bx-info-circle me-2"></i>
+                    تفاصيل المشروع
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Progress -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-semibold">التقدم</span>
+                        <span class="text-primary fw-bold">{{ project.progress_percentage }}%</span>
+                    </div>
+                    <div class="project-progress-bar">
+                        <div class="project-progress-fill status-{{ project.status }}" 
+                             style="width: {{ project.progress_percentage }}%"></div>
+                    </div>
+                </div>
+                
+                <!-- Assigned Employee -->
+                <div class="mb-3">
+                    <label class="form-label text-muted">الموظف المُعيّن</label>
+                    {% if project.assigned_employee %}
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-sm me-2">
+                            {% if project.assigned_employee.profile_picture %}
+                            <img src="{{ project.assigned_employee.profile_picture.url }}" alt="{{ project.assigned_employee.name }}" class="rounded-circle">
+                            {% else %}
+                            <span class="avatar-initial rounded-circle bg-label-primary">
+                                {{ project.assigned_employee.name|first|upper }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="fw-semibold">{{ project.assigned_employee.name }}</div>
+                            <small class="text-muted">{{ project.assigned_employee.job_title }}</small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <span class="text-muted fst-italic">غير محدد</span>
+                    {% endif %}
+                </div>
+                
+                <!-- Due Date -->
+                <div class="mb-3">
+                    <label class="form-label text-muted">تاريخ الانتهاء</label>
+                    <div>
+                        {% if project.due_date %}
+                        <i class="bx bx-calendar me-1"></i>
+                        {{ project.due_date|date:"d/m/Y" }}
+                        {% if project.is_overdue %}
+                        <span class="badge bg-danger ms-2">متأخر</span>
+                        {% elif project.days_remaining <= 7 %}
+                        <span class="badge bg-warning ms-2">قريب الانتهاء</span>
+                        {% endif %}
+                        {% else %}
+                        <span class="text-muted fst-italic">غير محدد</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Status -->
+                <div class="mb-3">
+                    <label class="form-label text-muted">الحالة</label>
+                    <div>
+                        <span class="project-status-badge status-{{ project.status }}">
+                            {{ project.get_status_display_arabic }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Creator Information -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bx bx-user-plus me-2"></i>
+                    معلومات الإنشاء
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Creator -->
+                <div class="mb-3">
+                    <label class="form-label text-muted">منشئ المشروع</label>
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-sm me-2">
+                            {% if project.created_by.profile_picture %}
+                            <img src="{{ project.created_by.profile_picture.url }}" alt="{{ project.created_by.name }}" class="rounded-circle">
+                            {% else %}
+                            <span class="avatar-initial rounded-circle bg-label-info">
+                                {{ project.created_by.name|first|upper }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="fw-semibold">{{ project.created_by.name }}</div>
+                            <small class="text-muted">{{ project.created_by.job_title }}</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Created Date -->
+                <div class="mb-3">
+                    <label class="form-label text-muted">تاريخ الإنشاء</label>
+                    <div>
+                        <i class="bx bx-calendar me-1"></i>
+                        {{ project.created_at|date:"d/m/Y H:i" }}
+                    </div>
+                </div>
+                
+                <!-- Last Updated -->
+                <div class="mb-0">
+                    <label class="form-label text-muted">آخر تحديث</label>
+                    <div>
+                        <i class="bx bx-clock me-1"></i>
+                        {{ project.updated_at|date:"d/m/Y H:i" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Delete Warning -->
+        {% if not can_delete %}
+        <div class="card mt-4">
+            <div class="card-body">
+                <div class="alert alert-warning mb-0">
+                    <h6 class="alert-heading">
+                        <i class="bx bx-info-circle me-1"></i>
+                        تنبيه حول الحذف
+                    </h6>
+                    <p class="mb-2">لا يمكن حذف هذا المشروع لأنه مرتبط بالعناصر التالية:</p>
+                    <ul class="mb-0">
+                        {% for blocker in deletion_blockers %}
+                        <li>{{ blocker }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modals -->
+<!-- Project Form Modal -->
+<div class="modal fade" id="projectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <!-- Modal content will be loaded here via AJAX -->
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <div class="avatar avatar-xl mx-auto mb-3">
+                        <span class="avatar-initial rounded bg-label-danger">
+                            <i class="bx bx-trash bx-lg"></i>
+                        </span>
+                    </div>
+                    <h5 class="mb-2">هل أنت متأكد؟</h5>
+                    <p class="text-muted mb-4" id="deleteConfirmText">
+                        هل تريد حذف المشروع؟ لن يمكن التراجع عن هذا الإجراء.
+                    </p>
+                    <div class="alert alert-danger d-none" id="deleteBlockersAlert">
+                        <h6 class="alert-heading">لا يمكن حذف المشروع!</h6>
+                        <p class="mb-0" id="deleteBlockersText"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Project Detail JavaScript for tasks app
+const ProjectDetailManager = {
+    config: {
+        toastDuration: 3000,
+        apiHeaders: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    },
+
+    init() {
+        this.bindEvents();
+        this.setupCSRFToken();
+        this.animateProgressBar();
+    },
+
+    bindEvents() {
+        $('#projectModal').on('hidden.bs.modal', this.cleanupModal.bind(this));
+        $('#confirmDeleteBtn').on('click', this.confirmDelete.bind(this));
+        $(document).on('submit', '#projectForm', this.handleFormSubmit.bind(this));
+    },
+
+    setupCSRFToken() {
+        const csrfToken = $('[name=csrfmiddlewaretoken]').val() || 
+                         $('meta[name=csrf-token]').attr('content') ||
+                         document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        if (csrfToken) {
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    if (!this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                    }
+                }
+            });
+        }
+    },
+
+    animateProgressBar() {
+        setTimeout(() => {
+            $('.project-progress-fill').css('transition', 'width 2s ease-in-out');
+        }, 500);
+    },
+
+    showEditForm(projectId) {
+        this.loadModal(`/tasks/projects/${projectId}/edit/`, '#projectModal', 'تعديل المشروع');
+    },
+
+    loadModal(url, modalSelector, title) {
+        const modal = $(modalSelector);
+        const modalContent = modal.find('.modal-content');
+        
+        modalContent.html(this.getLoadingHTML(title));
+        modal.modal('show');
+        
+        $.ajax({
+            url: url,
+            method: 'GET',
+            headers: this.config.apiHeaders,
+            success: function(response) {
+                modalContent.html(response);
+                this.initializeModalComponents();
+            }.bind(this),
+            error: function(xhr, status, error) {
+                modalContent.html(this.getErrorHTML('حدث خطأ أثناء تحميل البيانات'));
+                this.showToast('error', 'فشل تحميل البيانات');
+            }.bind(this)
+        });
+    },
+
+    handleFormSubmit(e) {
+        e.preventDefault();
+        
+        const form = $(e.target);
+        const submitBtn = form.find('button[type="submit"]');
+        const btnText = submitBtn.find('.btn-text');
+        const spinner = submitBtn.find('.spinner-border');
+        
+        this.setLoadingState(submitBtn, btnText, spinner, true);
+        
+        $.ajax({
+            url: form.attr('action'),
+            method: 'POST',
+            data: form.serialize(),
+            headers: this.config.apiHeaders,
+            success: function(response) {
+                if (response.success) {
+                    this.showToast('success', response.message);
+                    this.closeModal();
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    this.showFormErrors(response.error || response.errors);
+                }
+            }.bind(this),
+            error: function(xhr) {
+                const errorMessage = this.parseErrorResponse(xhr);
+                this.showFormErrors(errorMessage);
+            }.bind(this),
+            complete: function() {
+                this.setLoadingState(submitBtn, btnText, spinner, false);
+            }.bind(this)
+        });
+    },
+
+    showFormErrors(errors) {
+        const errorAlert = $('#formErrorAlert');
+        const errorList = $('#formErrorList');
+        
+        if (typeof errors === 'string') {
+            errors = [errors];
+        }
+        
+        if (errors && errors.length > 0) {
+            const errorItems = errors.map(error => `<li>${error}</li>`).join('');
+            errorList.html(errorItems);
+            errorAlert.removeClass('d-none');
+            
+            errorAlert[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    },
+
+    showDeleteConfirm(projectId, projectName, canDelete) {
+        const modal = $('#deleteConfirmModal');
+        const confirmBtn = $('#confirmDeleteBtn');
+        const confirmText = $('#deleteConfirmText');
+        const blockersAlert = $('#deleteBlockersAlert');
+        const blockersText = $('#deleteBlockersText');
+        
+        confirmBtn.data('project-id', projectId);
+        confirmText.text(`هل تريد حذف المشروع "${projectName}"؟ لن يمكن التراجع عن هذا الإجراء.`);
+        
+        if (canDelete === false || canDelete === 'false') {
+            confirmBtn.hide();
+            blockersAlert.removeClass('d-none');
+            blockersText.text('المشروع مرتبط ببيانات أخرى في النظام ولا يمكن حذفه.');
+        } else {
+            confirmBtn.show();
+            blockersAlert.addClass('d-none');
+        }
+        
+        modal.modal('show');
+    },
+
+    confirmDelete() {
+        const btn = $('#confirmDeleteBtn');
+        const projectId = btn.data('project-id');
+        
+        if (!projectId) return;
+        
+        const originalText = btn.html();
+        btn.html('<span class="spinner-border spinner-border-sm me-1"></span>جاري الحذف...');
+        btn.prop('disabled', true);
+        
+        $.ajax({
+            url: `/tasks/projects/${projectId}/delete/`,
+            method: 'POST',
+            headers: this.config.apiHeaders,
+            success: function(response) {
+                if (response.success) {
+                    this.showToast('success', response.message);
+                    $('#deleteConfirmModal').modal('hide');
+                    setTimeout(() => {
+                        window.location.href = '/tasks/projects/';
+                    }, 1000);
+                } else {
+                    this.showToast('error', response.error || 'حدث خطأ أثناء الحذف');
+                }
+            }.bind(this),
+            error: function() {
+                this.showToast('error', 'حدث خطأ أثناء حذف المشروع');
+            }.bind(this),
+            complete: function() {
+                btn.html(originalText);
+                btn.prop('disabled', false);
+            }
+        });
+    },
+
+    setLoadingState(btn, btnText, spinner, isLoading) {
+        if (isLoading) {
+            btn.prop('disabled', true);
+            if (btnText.length) btnText.addClass('d-none');
+            if (spinner.length) spinner.removeClass('d-none');
+        } else {
+            btn.prop('disabled', false);
+            if (btnText.length) btnText.removeClass('d-none');
+            if (spinner.length) spinner.addClass('d-none');
+        }
+    },
+
+    closeModal() {
+        $('.modal.show').modal('hide');
+    },
+
+    cleanupModal() {
+        $('#formErrorAlert').addClass('d-none');
+        $('.is-invalid').removeClass('is-invalid');
+        $('#projectForm')[0]?.reset();
+        
+        setTimeout(() => {
+            $('.modal-content').empty();
+        }, 300);
+    },
+
+    initializeModalComponents() {
+        setTimeout(() => {
+            $('.modal.show').find('input:first').focus();
+        }, 100);
+    },
+
+    showToast(type, message) {
+        $('.toast-container').remove();
+        
+        const toastClass = type === 'success' ? 'bg-success' : 'bg-danger';
+        const iconClass = type === 'success' ? 'bx-check' : 'bx-x';
+        
+        const toastHTML = `
+            <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+                <div class="toast show ${toastClass} text-white" role="alert">
+                    <div class="toast-header ${toastClass} text-white border-0">
+                        <i class="bx ${iconClass} me-2"></i>
+                        <strong class="me-auto">${type === 'success' ? 'نجح' : 'خطأ'}</strong>
+                        <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('body').append(toastHTML);
+        
+        setTimeout(() => {
+            $('.toast-container').fadeOut(300, function() {
+                $(this).remove();
+            });
+        }, this.config.toastDuration);
+    },
+
+    getLoadingHTML(title) {
+        return `
+            <div class="modal-header">
+                <h5 class="modal-title">${title}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">جاري التحميل...</span>
+                </div>
+                <p class="text-muted">جاري تحميل البيانات...</p>
+            </div>
+        `;
+    },
+
+    getErrorHTML(message) {
+        return `
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">خطأ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <div class="avatar avatar-xl mx-auto mb-3">
+                    <span class="avatar-initial rounded bg-label-danger">
+                        <i class="bx bx-error bx-lg"></i>
+                    </span>
+                </div>
+                <h6 class="mb-2">حدث خطأ</h6>
+                <p class="text-muted mb-4">${message}</p>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        `;
+    },
+
+    parseErrorResponse(xhr) {
+        let errorMessage = 'حدث خطأ غير متوقع';
+        
+        if (xhr.responseJSON) {
+            if (xhr.responseJSON.error) {
+                errorMessage = xhr.responseJSON.error;
+            } else if (xhr.responseJSON.errors) {
+                if (Array.isArray(xhr.responseJSON.errors)) {
+                    errorMessage = xhr.responseJSON.errors.join(', ');
+                } else {
+                    errorMessage = Object.values(xhr.responseJSON.errors).join(', ');
+                }
+            }
+        } else if (xhr.status === 400) {
+            errorMessage = 'البيانات المدخلة غير صحيحة';
+        } else if (xhr.status === 403) {
+            errorMessage = 'ليس لديك صلاحية لتنفيذ هذا الإجراء';
+        } else if (xhr.status === 404) {
+            errorMessage = 'المشروع المطلوب غير موجود';
+        } else if (xhr.status === 500) {
+            errorMessage = 'خطأ في الخادم، يرجى المحاولة لاحقاً';
+        }
+        
+        return errorMessage;
+    }
+};
+
+// Initialize when document is ready
+$(document).ready(function() {
+    ProjectDetailManager.init();
+    
+    $('.project-edit-btn').on('click', function(e) {
+        e.preventDefault();
+        const projectId = $(this).data('project-id');
+        ProjectDetailManager.showEditForm(projectId);
+    });
+    
+    $('.project-delete-btn').on('click', function(e) {
+        e.preventDefault();
+        const projectId = $(this).data('project-id');
+        const projectName = $(this).data('project-name');
+        const canDelete = $(this).data('can-delete');
+        ProjectDetailManager.showDeleteConfirm(projectId, projectName, canDelete);
+    });
+    
+    $('a[href^="#"]').on('click', function(e) {
+        e.preventDefault();
+        const target = $(this.getAttribute('href'));
+        if (target.length) {
+            $('html, body').animate({
+                scrollTop: target.offset().top - 100
+            }, 500);
+        }
+    });
+});
+
+window.ProjectDetailManager = ProjectDetailManager;
+</script>
+{% endblock %}

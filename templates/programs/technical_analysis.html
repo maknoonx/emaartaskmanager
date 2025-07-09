@@ -1,0 +1,304 @@
+<!-- programs/templates/programs/technical_analysis.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.room-card {
+    transition: all 0.3s ease;
+    border-radius: 12px;
+    border: 2px solid #e3e6f0;
+    cursor: pointer;
+    height: 180px;
+}
+.room-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border-color: #5a5fef;
+}
+.room-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+    margin: 0 auto 15px;
+}
+.room-bedroom { background: linear-gradient(45deg, #667eea, #764ba2); }
+.room-bathroom { background: linear-gradient(45deg, #f093fb, #f5576c); }
+.room-living_room { background: linear-gradient(45deg, #4facfe, #00f2fe); }
+.room-kitchen { background: linear-gradient(45deg, #43e97b, #38f9d7); }
+.room-majlis { background: linear-gradient(45deg, #fa709a, #fee140); }
+.room-rooftop { background: linear-gradient(45deg, #a8edea, #fed6e3); }
+.room-courtyard { background: linear-gradient(45deg, #ff9a9e, #fecfef); }
+
+.analysis-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+}
+.status-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <a href="{% url 'programs:house_detail' program.pk house.pk %}" class="btn btn-outline-secondary me-3">
+                            <i class="bx bx-arrow-back"></i>
+                        </a>
+                        <div>
+                            <h4 class="card-title mb-1">
+                                <i class="bx bx-analyze me-2"></i>
+                                التحليل الفني
+                            </h4>
+                            <p class="card-subtitle text-muted mb-0">منزل رقم {{ house.house_number }} - {{ program.name }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analysis Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card analysis-header">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="text-white mb-3">تحليل تفصيلي للمنزل</h5>
+                            <p class="text-white-75 mb-3">اضغط على أي غرفة لإدخال أو تعديل التفاصيل الفنية</p>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <strong>صاحب المنزل:</strong> {{ general_info.owner_name }}
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <strong>نوع المبنى:</strong> {{ general_info.get_building_type_display }}
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <strong>إجمالي الغرف:</strong> {{ room_cards|length }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="d-flex flex-column align-items-center">
+                                <div class="avatar avatar-xl mb-3">
+                                    <span class="avatar-initial rounded-circle bg-white text-primary">
+                                        <i class="bx bx-analyze bx-lg"></i>
+                                    </span>
+                                </div>
+                                <h3 class="text-white mb-0">{{ analyzed_rooms }}</h3>
+                                <span class="text-white-75">غرفة مُحللة</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Cards Grid -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-grid me-2"></i>
+                        غرف المنزل ({{ room_cards|length }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if room_cards %}
+                    <div class="row">
+                        {% for room in room_cards %}
+                        <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                            <div class="room-card position-relative" 
+                                 onclick="window.location.href='{% url 'programs:room_detail' program.pk house.pk room.type room.number %}'">
+                                
+                                <!-- Status Badge -->
+                                {% if room.has_details %}
+                                <span class="status-badge badge bg-success">
+                                    <i class="bx bx-check me-1"></i>مكتمل
+                                </span>
+                                {% else %}
+                                <span class="status-badge badge bg-warning">
+                                    <i class="bx bx-time me-1"></i>في الانتظار
+                                </span>
+                                {% endif %}
+
+                                <div class="card h-100">
+                                    <div class="card-body d-flex flex-column justify-content-center align-items-center text-center">
+                                        <!-- Room Icon -->
+                                        <div class="room-icon room-{{ room.type }}">
+                                            <i class="bx {{ room.icon }}"></i>
+                                        </div>
+                                        
+                                        <!-- Room Info -->
+                                        <h6 class="card-title mb-2">{{ room.type_display }} {{ room.number }}</h6>
+                                        
+                                        <!-- Analysis Status -->
+                                        {% if room.has_details %}
+                                        <div class="small text-success mb-2">
+                                            <i class="bx bx-check-circle me-1"></i>
+                                            تم التحليل
+                                        </div>
+                                        {% if room.room_detail.area %}
+                                        <div class="small text-muted mb-1">
+                                            المساحة: {{ room.room_detail.area }} م²
+                                        </div>
+                                        {% endif %}
+                                        {% if room.room_detail.people_count %}
+                                        <div class="small text-muted">
+                                            {{ room.room_detail.people_count }} أشخاص
+                                        </div>
+                                        {% endif %}
+                                        {% else %}
+                                        <div class="small text-warning mb-2">
+                                            <i class="bx bx-time me-1"></i>
+                                            لم يتم التحليل
+                                        </div>
+                                        <div class="small text-muted">
+                                            اضغط لإدخال التفاصيل
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Progress Summary -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-md-3">
+                                            <div class="d-flex flex-column">
+                                                <span class="h4 mb-1 text-success">{{ analyzed_rooms }}</span>
+                                                <small class="text-muted">غرف مُحللة</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="d-flex flex-column">
+                                                <span class="h4 mb-1 text-warning">{{ remaining_rooms }}</span>
+                                                <small class="text-muted">في الانتظار</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="d-flex flex-column">
+                                                <span class="h4 mb-1 text-info">{{ total_rooms }}</span>
+                                                <small class="text-muted">إجمالي الغرف</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="d-flex flex-column">
+                                                <span class="h4 mb-1 text-primary">{{ progress_percentage }}%</span>
+                                                <small class="text-muted">نسبة الإنجاز</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Progress Bar -->
+                                    <div class="mt-3">
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-success" 
+                                                 role="progressbar" 
+                                                 style="width: {{ progress_percentage }}%"
+                                                 aria-valuenow="{{ progress_percentage }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% else %}
+                    <!-- Empty State -->
+                    <div class="text-center py-5">
+                        <div class="mb-4">
+                            <i class="bx bx-error-circle" style="font-size: 4rem; color: #8592a3;"></i>
+                        </div>
+                        <h4 class="mb-2">لا توجد غرف للتحليل</h4>
+                        <p class="text-muted mb-4">يبدو أن هناك مشكلة في بيانات المنزل. تأكد من المعلومات العامة.</p>
+                        <a href="{% url 'programs:house_detail' program.pk house.pk %}" class="btn btn-primary">
+                            <i class="bx bx-arrow-back me-1"></i>
+                            العودة لصفحة المنزل
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add hover effects and animations
+document.addEventListener('DOMContentLoaded', function() {
+    const roomCards = document.querySelectorAll('.room-card');
+    
+    roomCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+        
+        card.addEventListener('click', function(e) {
+            // Add click animation
+            this.style.transform = 'translateY(-2px) scale(0.98)';
+            setTimeout(() => {
+                this.style.transform = 'translateY(-5px) scale(1)';
+            }, 150);
+        });
+    });
+    
+    // Auto-refresh progress if rooms are being analyzed
+    const totalRooms = {{ room_cards|length }};
+    const analyzedRooms = {{ house.room_details.count }};
+    
+    if (analyzedRooms > 0 && analyzedRooms < totalRooms) {
+        // Show completion message when all rooms are analyzed
+        setInterval(() => {
+            fetch(window.location.href)
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const newDoc = parser.parseFromString(html, 'text/html');
+                    const newAnalyzedCount = newDoc.querySelector('.text-success .h4').textContent;
+                    const currentAnalyzedCount = document.querySelector('.text-success .h4').textContent;
+                    
+                    if (newAnalyzedCount !== currentAnalyzedCount) {
+                        location.reload();
+                    }
+                });
+        }, 30000); // Check every 30 seconds
+    }
+});
+</script>
+{% endblock %}

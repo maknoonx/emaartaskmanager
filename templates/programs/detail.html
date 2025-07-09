@@ -1,0 +1,271 @@
+<!-- programs/templates/programs/detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.house-card {
+    transition: all 0.3s ease;
+    border-radius: 12px;
+    border: 2px solid #e3e6f0;
+    cursor: pointer;
+}
+.house-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border-color: #5a5fef;
+}
+.house-number {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+    background: linear-gradient(45deg, #5a5fef, #7b68ee);
+    margin: 0 auto 15px;
+}
+.program-info-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <a href="{% url 'programs:index' %}" class="btn btn-outline-secondary me-3">
+                                <i class="bx bx-arrow-back"></i>
+                            </a>
+                            <div>
+                                <h4 class="card-title mb-1">
+                                    <i class="bx bx-building-house me-2"></i>
+                                    {{ program.name }}
+                                </h4>
+                                <p class="card-subtitle text-muted mb-0">عرض منازل البرنامج</p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'programs:edit' program.pk %}" class="btn btn-warning">
+                                <i class="bx bx-edit me-1"></i>
+                                تعديل البرنامج
+                            </a>
+                            <button class="btn btn-danger" onclick="confirmDelete({{ program.pk }}, '{{ program.name }}')">
+                                <i class="bx bx-trash me-1"></i>
+                                حذف البرنامج
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Program Info -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card program-info-card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5 class="text-white mb-3">معلومات البرنامج</h5>
+                            {% if program.description %}
+                            <p class="text-white-75 mb-3">{{ program.description }}</p>
+                            {% endif %}
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <i class="bx bx-home me-2"></i>
+                                    <strong>عدد المنازل:</strong> {{ program.number_of_houses }}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <i class="bx bx-calendar me-2"></i>
+                                    <strong>تاريخ الإنشاء:</strong> {{ program.created_at|date:"d/m/Y" }}
+                                </div>
+                                <div class="col-12 mb-2">
+                                    <i class="bx bx-map me-2"></i>
+                                    <strong>العنوان:</strong> {{ program.address }}
+                                </div>
+                                <div class="col-12">
+                                    <i class="bx bx-user me-2"></i>
+                                    <strong>منشئ البرنامج:</strong> {{ program.created_by.get_full_name|default:program.created_by.username }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="d-flex flex-column align-items-center">
+                                <div class="avatar avatar-xl mb-3">
+                                    <span class="avatar-initial rounded-circle bg-white text-primary">
+                                        <i class="bx bx-building-house bx-lg"></i>
+                                    </span>
+                                </div>
+                                <h3 class="text-white mb-0">{{ houses.count }}</h3>
+                                <span class="text-white-75">منزل متاح</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Houses Grid -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-home me-2"></i>
+                        المنازل ({{ houses.count }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if houses %}
+                    <div class="row">
+                        {% for house in houses %}
+                        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-4">
+                            <div class="house-card" onclick="window.location.href='{% url 'programs:house_detail' program.pk house.pk %}'">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <!-- House Number -->
+                                        <div class="house-number">
+                                            {{ house.house_number }}
+                                        </div>
+                                        
+                                        <!-- House Title -->
+                                        <h6 class="card-title mb-2">منزل رقم {{ house.house_number }}</h6>
+                                        
+                                        <!-- Status Indicators -->
+                                        <div class="mb-3">
+                                            {% if house.general_info %}
+                                            <span class="badge bg-success mb-1">
+                                                <i class="bx bx-check me-1"></i>
+                                                معلومات عامة
+                                            </span>
+                                            <br>
+                                            {% else %}
+                                            <span class="badge bg-warning mb-1">
+                                                <i class="bx bx-info-circle me-1"></i>
+                                                بحاجة لمعلومات
+                                            </span>
+                                            <br>
+                                            {% endif %}
+                                            
+                                            {% if house.room_details.exists %}
+                                            <span class="badge bg-info">
+                                                <i class="bx bx-cog me-1"></i>
+                                                تحليل فني
+                                            </span>
+                                            {% else %}
+                                            <span class="badge bg-light text-muted">
+                                                <i class="bx bx-cog me-1"></i>
+                                                لا يوجد تحليل
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Quick Info -->
+                                        {% if house.general_info %}
+                                        <div class="small text-muted">
+                                            <div>{{ house.general_info.owner_name|truncatechars:20 }}</div>
+                                            <div>{{ house.general_info.bedrooms }} غرف نوم</div>
+                                            <div>{{ house.general_info.number_of_residents }} أفراد</div>
+                                        </div>
+                                        {% else %}
+                                        <div class="small text-muted">
+                                            اضغط لإدخال البيانات
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <!-- Empty State -->
+                    <div class="text-center py-5">
+                        <div class="mb-4">
+                            <i class="bx bx-home" style="font-size: 4rem; color: #8592a3;"></i>
+                        </div>
+                        <h4 class="mb-2">لا توجد منازل في هذا البرنامج</h4>
+                        <p class="text-muted mb-4">يبدو أن هناك مشكلة في إعداد البرنامج. تأكد من عدد المنازل المحدد.</p>
+                        <a href="{% url 'programs:edit' program.pk %}" class="btn btn-primary">
+                            <i class="bx bx-edit me-1"></i>
+                            تعديل البرنامج
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(programId, programName) {
+    if (confirm(`هل أنت متأكد من حذف البرنامج "${programName}"؟\n\nسيتم حذف جميع المنازل والبيانات المرتبطة بهذا البرنامج نهائياً.`)) {
+        // Create form and submit
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/programs/${programId}/delete/`;
+        
+        // Add CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfToken) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken.value;
+            form.appendChild(csrfInput);
+        }
+        
+        // Add method override for DELETE
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'DELETE';
+        form.appendChild(methodInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Add hover effects and click animations
+document.addEventListener('DOMContentLoaded', function() {
+    const houseCards = document.querySelectorAll('.house-card');
+    
+    houseCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+        
+        card.addEventListener('click', function(e) {
+            // Add click animation
+            this.style.transform = 'translateY(-2px) scale(0.98)';
+            setTimeout(() => {
+                this.style.transform = 'translateY(-5px) scale(1)';
+            }, 150);
+        });
+    });
+});
+{% endblock %}

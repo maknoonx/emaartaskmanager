@@ -1,0 +1,284 @@
+<div class="modal-header">
+    <h5 class="modal-title">
+        <i class="bx bx-user me-2"></i>
+        تفاصيل الموظف - {{ employee.display_name }}
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+    <!-- Employee Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <div class="avatar avatar-xl mx-auto mb-3">
+                        {% if employee.profile_picture %}
+                        <img src="{{ employee.profile_picture.url }}" alt="{{ employee.name }}" class="rounded-circle">
+                        {% else %}
+                        <span class="avatar-initial rounded-circle bg-white text-primary">
+                            <i class="bx bx-user bx-lg"></i>
+                        </span>
+                        {% endif %}
+                    </div>
+                    <h5 class="mb-1">{{ employee.name }}</h5>
+                    <p class="mb-0">{{ employee.job_title }}</p>
+                    <div class="mt-2">
+                        {% if employee.is_active_employee %}
+                        <span class="badge bg-success">نشط</span>
+                        {% else %}
+                        <span class="badge bg-warning">غير نشط</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Account Information -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h6 class="text-primary mb-3">
+                <i class="bx bx-user-circle me-1"></i>
+                معلومات الحساب
+            </h6>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">اسم المستخدم</label>
+            <div class="form-control-plaintext fw-semibold">{{ employee.username }}</div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">تاريخ آخر دخول</label>
+            <div class="form-control-plaintext">
+                {% if employee.last_login %}
+                {{ employee.last_login|date:"d/m/Y H:i" }}
+                {% else %}
+                <span class="text-muted">لم يدخل من قبل</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Personal Information -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h6 class="text-primary mb-3">
+                <i class="bx bx-id-card me-1"></i>
+                المعلومات الشخصية
+            </h6>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">الاسم الكامل</label>
+            <div class="form-control-plaintext fw-semibold">{{ employee.name }}</div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">البريد الإلكتروني</label>
+            <div class="form-control-plaintext">
+                <a href="mailto:{{ employee.email }}" class="text-primary">
+                    <i class="bx bx-envelope me-1"></i>
+                    {{ employee.email }}
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">رقم الجوال</label>
+            <div class="form-control-plaintext">
+                <a href="tel:{{ employee.get_full_mobile }}" class="text-primary">
+                    <i class="bx bx-phone me-1"></i>
+                    {{ employee.mobile_number }}
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Job Information -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h6 class="text-primary mb-3">
+                <i class="bx bx-briefcase me-1"></i>
+                المعلومات الوظيفية
+            </h6>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">الرقم الوظيفي</label>
+            <div class="form-control-plaintext">
+                <span class="badge bg-label-info fs-6">{{ employee.job_number }}</span>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">المسمى الوظيفي</label>
+            <div class="form-control-plaintext fw-semibold">{{ employee.job_title }}</div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">القسم</label>
+            <div class="form-control-plaintext">
+                <span class="badge bg-label-secondary fs-6">{{ employee.get_section_display_arabic }}</span>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">تاريخ التوظيف</label>
+            <div class="form-control-plaintext">
+                <i class="bx bx-calendar me-1"></i>
+                {{ employee.hire_date|date:"d/m/Y" }}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Additional Information -->
+    {% if employee.notes %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h6 class="text-primary mb-3">
+                <i class="bx bx-note me-1"></i>
+                ملاحظات إضافية
+            </h6>
+            <div class="card bg-light">
+                <div class="card-body">
+                    <p class="mb-0">{{ employee.notes|linebreaks }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- System Information -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <h6 class="text-primary mb-3">
+                <i class="bx bx-info-circle me-1"></i>
+                معلومات النظام
+            </h6>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">تاريخ الإنشاء</label>
+            <div class="form-control-plaintext">
+                <small>{{ employee.created_at|date:"d/m/Y H:i" }}</small>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">آخر تحديث</label>
+            <div class="form-control-plaintext">
+                <small>{{ employee.updated_at|date:"d/m/Y H:i" }}</small>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">صلاحيات المدير</label>
+            <div class="form-control-plaintext">
+                {% if employee.is_superuser %}
+                <span class="badge bg-danger">مدير النظام</span>
+                {% elif employee.is_staff %}
+                <span class="badge bg-warning">موظف إداري</span>
+                {% else %}
+                <span class="badge bg-info">مستخدم عادي</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">حالة الحساب</label>
+            <div class="form-control-plaintext">
+                {% if employee.is_active %}
+                <span class="badge bg-success">نشط</span>
+                {% else %}
+                <span class="badge bg-danger">معطل</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Warning -->
+    {% if not can_delete %}
+    <div class="alert alert-warning">
+        <h6 class="alert-heading">
+            <i class="bx bx-info-circle me-1"></i>
+            تنبيه حول الحذف
+        </h6>
+        <p class="mb-2">لا يمكن حذف هذا الموظف لأنه مرتبط بالعناصر التالية:</p>
+        <ul class="mb-0">
+            {% for blocker in deletion_blockers %}
+            <li>{{ blocker }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+        إغلاق
+    </button>
+    <div class="btn-group">
+        <button type="button" class="btn btn-primary employee-edit-btn" 
+                data-employee-id="{{ employee.pk }}">
+            <i class="bx bx-edit me-1"></i>
+            تعديل
+        </button>
+        <button type="button" class="btn btn-outline-primary employee-toggle-status-btn" 
+                data-employee-id="{{ employee.pk }}" 
+                data-current-status="{{ employee.is_active_employee }}">
+            <i class="bx bx-refresh me-1"></i>
+            {% if employee.is_active_employee %}إلغاء تفعيل{% else %}تفعيل{% endif %}
+        </button>
+        {% if can_delete %}
+        <button type="button" class="btn btn-outline-danger employee-delete-btn" 
+                data-employee-id="{{ employee.pk }}" 
+                data-employee-name="{{ employee.name }}"
+                data-can-delete="true">
+            <i class="bx bx-trash me-1"></i>
+            حذف
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Re-bind event handlers for buttons in this modal
+    $('.employee-edit-btn').off('click').on('click', function(e) {
+        e.preventDefault();
+        const employeeId = $(this).data('employee-id');
+        $('#employeeDetailModal').modal('hide');
+        setTimeout(() => {
+            if (window.EmployeeManager) {
+                window.EmployeeManager.showEditForm(employeeId);
+            }
+        }, 300);
+    });
+    
+    $('.employee-toggle-status-btn').off('click').on('click', function(e) {
+        e.preventDefault();
+        const employeeId = $(this).data('employee-id');
+        const currentStatus = $(this).data('current-status');
+        
+        if (window.EmployeeManager) {
+            window.EmployeeManager.handleStatusToggle.call(window.EmployeeManager, e);
+        }
+    });
+    
+    $('.employee-delete-btn').off('click').on('click', function(e) {
+        e.preventDefault();
+        const employeeId = $(this).data('employee-id');
+        const employeeName = $(this).data('employee-name');
+        const canDelete = $(this).data('can-delete');
+        
+        $('#employeeDetailModal').modal('hide');
+        setTimeout(() => {
+            if (window.EmployeeManager) {
+                window.EmployeeManager.showDeleteConfirm(employeeId, employeeName, canDelete);
+            }
+        }, 300);
+    });
+});
+</script>

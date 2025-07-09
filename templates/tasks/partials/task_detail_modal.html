@@ -1,0 +1,266 @@
+<div class="modal-header">
+    <h5 class="modal-title">
+        <i class="bx bx-task me-2"></i>
+        تفاصيل المهمة - {{ task.name }}
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+    <!-- Task Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="mb-2">{{ task.name }}</h5>
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="badge bg-white text-primary">
+                            {{ task.get_status_display_arabic }}
+                        </span>
+                        {% if task.due_date %}
+                        <span class="badge {% if task.is_overdue %}bg-danger{% elif task.days_remaining <= 3 %}bg-warning{% else %}bg-success{% endif %}">
+                            <i class="bx bx-calendar me-1"></i>
+                            {% if task.is_overdue %}
+                            متأخر {{ task.days_remaining|add:"-1" }} يوم
+                            {% elif task.days_remaining == 0 %}
+                            ينتهي اليوم
+                            {% elif task.days_remaining == 1 %}
+                            ينتهي غداً
+                            {% else %}
+                            {{ task.days_remaining }} يوم متبقي
+                            {% endif %}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Task Description -->
+    {% if task.detail %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h6 class="text-primary mb-3">
+                <i class="bx bx-file-text me-1"></i>
+                تفاصيل المهمة
+            </h6>
+            <div class="card bg-light">
+                <div class="card-body">
+                    <p class="mb-0">{{ task.detail|linebreaks }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Task Information Grid -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h6 class="text-primary mb-3">
+                <i class="bx bx-info-circle me-1"></i>
+                معلومات المهمة
+            </h6>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">حالة المهمة</label>
+            <div class="form-control-plaintext">
+                <span class="task-status-badge status-{{ task.status }}">
+                    {{ task.get_status_display_arabic }}
+                </span>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">تاريخ الانتهاء</label>
+            <div class="form-control-plaintext">
+                {% if task.due_date %}
+                <i class="bx bx-calendar me-1"></i>
+                {{ task.due_date|date:"d/m/Y" }}
+                {% if task.is_overdue %}
+                <span class="badge bg-danger ms-2">متأخر</span>
+                {% elif task.days_remaining <= 3 %}
+                <span class="badge bg-warning ms-2">قريب الانتهاء</span>
+                {% endif %}
+                {% else %}
+                <span class="text-muted fst-italic">غير محدد</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">المشروع المرتبط</label>
+            <div class="form-control-plaintext">
+                {% if task.project %}
+                <span class="badge bg-label-secondary fs-6">{{ task.project.name }}</span>
+                {% else %}
+                <span class="text-muted fst-italic">بدون مشروع</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">مُعيّن إلى</label>
+            <div class="form-control-plaintext">
+                {% if task.assigned_to %}
+                <div class="d-flex align-items-center">
+                    <div class="avatar avatar-sm me-2">
+                        {% if task.assigned_to.profile_picture %}
+                        <img src="{{ task.assigned_to.profile_picture.url }}" alt="{{ task.assigned_to.name }}" class="rounded-circle">
+                        {% else %}
+                        <span class="avatar-initial rounded-circle bg-label-primary">
+                            {{ task.assigned_to.name|first|upper }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div class="fw-semibold">{{ task.assigned_to.name }}</div>
+                        <small class="text-muted">{{ task.assigned_to.job_title }}</small>
+                    </div>
+                </div>
+                {% else %}
+                <span class="text-muted fst-italic">مهمة شخصية</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Task Creator Information -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h6 class="text-primary mb-3">
+                <i class="bx bx-user-plus me-1"></i>
+                معلومات المنشئ
+            </h6>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">منشئ المهمة</label>
+            <div class="form-control-plaintext">
+                <div class="d-flex align-items-center">
+                    <div class="avatar avatar-sm me-2">
+                        {% if task.created_by.profile_picture %}
+                        <img src="{{ task.created_by.profile_picture.url }}" alt="{{ task.created_by.name }}" class="rounded-circle">
+                        {% else %}
+                        <span class="avatar-initial rounded-circle bg-label-info">
+                            {{ task.created_by.name|first|upper }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div class="fw-semibold">{{ task.created_by.name }}</div>
+                        <small class="text-muted">{{ task.created_by.job_title }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">تاريخ الإنشاء</label>
+            <div class="form-control-plaintext">
+                <i class="bx bx-calendar me-1"></i>
+                {{ task.created_at|date:"d/m/Y H:i" }}
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">آخر تحديث</label>
+            <div class="form-control-plaintext">
+                <i class="bx bx-clock me-1"></i>
+                {{ task.updated_at|date:"d/m/Y H:i" }}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Alerts and Warnings -->
+    {% if task.is_overdue %}
+    <div class="alert alert-danger">
+        <h6 class="alert-heading">
+            <i class="bx bx-error-circle me-1"></i>
+            مهمة متأخرة!
+        </h6>
+        <p class="mb-2">هذه المهمة متأخرة عن الموعد المحدد بـ {{ task.days_remaining|add:"-1" }} يوم.</p>
+        <hr>
+        <p class="mb-0">يرجى متابعة إنجاز المهمة في أسرع وقت ممكن.</p>
+    </div>
+    {% elif task.days_remaining <= 3 and task.days_remaining > 0 %}
+    <div class="alert alert-warning">
+        <h6 class="alert-heading">
+            <i class="bx bx-time me-1"></i>
+            مهمة قريبة الانتهاء
+        </h6>
+        <p class="mb-0">باقي {{ task.days_remaining }} أيام على انتهاء المهمة. يرجى متابعة التقدم.</p>
+    </div>
+    {% endif %}
+    
+    <!-- Permissions Information -->
+    {% if not can_edit and not can_delete %}
+    <div class="alert alert-info">
+        <h6 class="alert-heading">
+            <i class="bx bx-info-circle me-1"></i>
+            ملاحظة حول الصلاحيات
+        </h6>
+        <p class="mb-0">
+            {% if task.assigned_to == request.user %}
+            يمكنك تغيير حالة هذه المهمة فقط، لا يمكن تعديل التفاصيل لأنها مُعيّنة إليك من موظف آخر.
+            {% else %}
+            هذه المهمة للعرض فقط.
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+        إغلاق
+    </button>
+    <div class="btn-group">
+
+        
+
+
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Re-bind event handlers for buttons in this modal
+    $('.task-edit-btn').off('click').on('click', function(e) {
+        e.preventDefault();
+        const taskId = $(this).data('task-id');
+        $('#taskDetailModal').modal('hide');
+        setTimeout(() => {
+            if (window.TaskManager) {
+                window.TaskManager.showEditForm(taskId);
+            }
+        }, 300);
+    });
+    
+    $('.task-toggle-status-btn').off('click').on('click', function(e) {
+        e.preventDefault();
+        const taskId = $(this).data('task-id');
+        
+        $('#taskDetailModal').modal('hide');
+        setTimeout(() => {
+            if (window.TaskManager) {
+                window.TaskManager.toggleTaskStatus(taskId);
+            }
+        }, 300);
+    });
+    
+    $('.task-delete-btn').off('click').on('click', function(e) {
+        e.preventDefault();
+        const taskId = $(this).data('task-id');
+        const taskName = $(this).data('task-name');
+        
+        $('#taskDetailModal').modal('hide');
+        setTimeout(() => {
+            if (window.TaskManager) {
+                window.TaskManager.showDeleteConfirm(taskId, taskName);
+            }
+        }, 300);
+    });
+});
+</script>

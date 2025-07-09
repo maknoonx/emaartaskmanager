@@ -1,0 +1,248 @@
+<div class="modal-header">
+    <h5 class="modal-title">
+        <i class="bx bx-target-lock me-2"></i>
+        أهداف {{ monthly_goal.month_year_display }}
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+    <!-- Goal Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <div class="avatar avatar-xl mx-auto mb-3">
+                        <span class="avatar-initial rounded-circle bg-white text-primary">
+                            <i class="bx bx-target-lock bx-lg"></i>
+                        </span>
+                    </div>
+                    <h5 class="mb-1">{{ monthly_goal.month_name }} {{ monthly_goal.year }}</h5>
+                    <div class="mt-2">
+                        <span class="badge bg-white text-primary">{{ monthly_goal.goals_count }} هدف</span>
+                        {% now 'm' as now_month %}{% now 'Y' as now_year %}
+                        {% if monthly_goal.month == now_month|add:'0' and monthly_goal.year == now_year|add:'0' %}
+                        <span class="badge bg-success">الشهر الحالي</span>
+                        {% elif monthly_goal.year < now_year|add:'0' or monthly_goal.year == now_year|add:'0' and monthly_goal.month < now_month|add:'0' %}
+                        <span class="badge bg-secondary">شهر سابق</span>
+                        {% else %}
+                        <span class="badge bg-warning">شهر قادم</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Goals Content -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h6 class="text-primary mb-3">
+                <i class="bx bx-list-ul me-1"></i>
+                الأهداف التفصيلية
+            </h6>
+            <div class="goals-display">
+                <pre class="goals-text">{{ monthly_goal.goals }}</pre>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Goal Information -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h6 class="text-primary mb-3">
+                <i class="bx bx-info-circle me-1"></i>
+                معلومات الأهداف
+            </h6>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">الموظف</label>
+            <div class="form-control-plaintext">
+                <div class="d-flex align-items-center">
+                    <div class="avatar avatar-sm me-2">
+                        {% if monthly_goal.employee.profile_picture %}
+                        <img src="{{ monthly_goal.employee.profile_picture.url }}" alt="{{ monthly_goal.employee.name }}" class="rounded-circle">
+                        {% else %}
+                        <span class="avatar-initial rounded-circle bg-label-primary">
+                            {{ monthly_goal.employee.name|first|upper }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div class="fw-semibold">{{ monthly_goal.employee.name }}</div>
+                        <small class="text-muted">{{ monthly_goal.employee.job_title }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">الفترة الزمنية</label>
+            <div class="form-control-plaintext">
+                <i class="bx bx-calendar me-1"></i>
+                {{ monthly_goal.month_year_display }}
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">تاريخ الإنشاء</label>
+            <div class="form-control-plaintext">
+                <i class="bx bx-plus-circle me-1"></i>
+                {{ monthly_goal.created_at|date:"d/m/Y H:i" }}
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">آخر تحديث</label>
+            <div class="form-control-plaintext">
+                <i class="bx bx-edit me-1"></i>
+                {{ monthly_goal.updated_at|date:"d/m/Y H:i" }}
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">عدد الأهداف</label>
+            <div class="form-control-plaintext">
+                <span class="badge bg-label-info fs-6">{{ monthly_goal.goals_count }} هدف</span>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-muted">عدد الأحرف</label>
+            <div class="form-control-plaintext">
+                <span class="badge bg-label-secondary fs-6">{{ monthly_goal.goals|length }} حرف</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Goals Analysis -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h6 class="text-primary mb-3">
+                <i class="bx bx-chart me-1"></i>
+                تحليل الأهداف
+            </h6>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-primary">{{ monthly_goal.goals_count }}</h5>
+                    <p class="card-text text-muted">عدد الأهداف</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-info">{{ monthly_goal.goals|length }}</h5>
+                    <p class="card-text text-muted">عدد الأحرف</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-success">
+                        {% widthratio monthly_goal.goals|length 100 1 %}%
+                    </h5>
+                    <p class="card-text text-muted">نسبة التفصيل</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Status Information -->
+    {% now 'm' as now_month %}{% now 'Y' as now_year %}
+    {% if monthly_goal.month == now_month|add:'0' and monthly_goal.year == now_year|add:'0' %}
+    <div class="alert alert-success">
+        <h6 class="alert-heading">
+            <i class="bx bx-check-circle me-1"></i>
+            الشهر الحالي
+        </h6>
+        <p class="mb-0">هذه هي أهدافك للشهر الحالي. تأكد من متابعة تقدمك في تحقيق هذه الأهداف.</p>
+    </div>
+    {% elif monthly_goal.year < now_year|add:'0' or monthly_goal.year == now_year|add:'0' and monthly_goal.month < now_month|add:'0' %}
+    <div class="alert alert-info">
+        <h6 class="alert-heading">
+            <i class="bx bx-history me-1"></i>
+            شهر سابق
+        </h6>
+        <p class="mb-0">هذه أهداف من شهر سابق. يمكنك مراجعتها لتقييم إنجازاتك والتعلم من التجربة.</p>
+    </div>
+    {% else %}
+    <div class="alert alert-warning">
+        <h6 class="alert-heading">
+            <i class="bx bx-time me-1"></i>
+            شهر مستقبلي
+        </h6>
+        <p class="mb-0">هذه أهداف لشهر قادم. تأكد من وضوحها وقابليتها للتحقيق.</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+        إغلاق
+    </button>
+
+</div>
+
+<script>
+$(document).ready(function() {
+    // Re-bind event handlers for buttons in this modal
+    $('.goal-edit-btn').off('click').on('click', function(e) {
+        e.preventDefault();
+        const goalId = $(this).data('goal-id');
+        $('#goalDetailModal').modal('hide');
+        setTimeout(() => {
+            if (window.MonthlyGoalsManager) {
+                window.MonthlyGoalsManager.showEditForm(goalId);
+            }
+        }, 300);
+    });
+    
+    $('.goal-delete-btn').off('click').on('click', function(e) {
+        e.preventDefault();
+        const goalId = $(this).data('goal-id');
+        const goalName = $(this).data('goal-name');
+        
+        $('#goalDetailModal').modal('hide');
+        setTimeout(() => {
+            if (window.MonthlyGoalsManager) {
+                window.MonthlyGoalsManager.showDeleteConfirm(goalId, goalName);
+            }
+        }, 300);
+    });
+    
+    // Add print styles when printing
+    $('button[onclick="window.print()"]').on('click', function() {
+        const printCSS = `
+            <style>
+                @media print {
+                    .modal-header, .modal-footer { display: none !important; }
+                    .modal-body { padding: 0 !important; }
+                    .card { box-shadow: none !important; border: 1px solid #000 !important; }
+                    .goals-display { background: white !important; border: 1px solid #000 !important; }
+                    .alert { border: 1px solid currentColor !important; }
+                }
+            </style>
+        `;
+        
+        const originalContents = document.body.innerHTML;
+        const printContents = $('#goalDetailModal .modal-body').html();
+        
+        document.body.innerHTML = printCSS + '<div style="padding: 20px;">' + printContents + '</div>';
+        window.print();
+        document.body.innerHTML = originalContents;
+        
+        // Re-initialize the page
+        setTimeout(() => {
+            window.location.reload();
+        }, 100);
+    });
+});
+</script>

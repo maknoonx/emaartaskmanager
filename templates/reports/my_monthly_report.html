@@ -1,0 +1,536 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - جمعية إعمار{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/monthly_reports.css' %}" />
+{% endblock %}
+
+{% block content %}
+<!-- CSRF Token Hidden Input -->
+{% csrf_token %}
+
+<!-- My Monthly Report Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="card-title mb-0">
+                        <i class="bx bx-chart me-2"></i>
+                        تقريري الشهري
+                    </h4>
+                    <p class="text-muted mb-0">تقرير مهامي وأهدافي للشهر المحدد</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'reports:monthly_print' %}?month={{ selected_month }}&year={{ selected_year }}" 
+                       target="_blank" 
+                       class="btn btn-outline-primary">
+                        <i class="bx bx-printer me-1"></i>
+                        طباعة التقرير
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card filter-section">
+            <div class="card-body">
+                <form method="GET" class="row g-3" id="filterForm">
+                    <div class="col-md-4">
+                        <label class="form-label">الشهر</label>
+                        <select class="form-select" name="month" id="monthSelect">
+                            {% for month_num, month_name in month_names.items %}
+                            <option value="{{ month_num }}" {% if month_num == selected_month %}selected{% endif %}>
+                                {{ month_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">السنة</label>
+                        <select class="form-select" name="year" id="yearSelect">
+                            {% for year in year_range %}
+                            <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>
+                                {{ year }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bx bx-search me-1"></i>
+                            عرض التقرير
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Content -->
+{% if has_data %}
+<!-- Summary Statistics -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 col-sm-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar flex-shrink-0 me-3">
+                        <span class="avatar-initial rounded bg-label-primary">
+                            <i class="bx bx-plus-circle"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">{{ employee_report.stats.total_created }}</h5>
+                        <small class="text-muted">مهام جديدة</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 col-sm-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar flex-shrink-0 me-3">
+                        <span class="avatar-initial rounded bg-label-success">
+                            <i class="bx bx-check-circle"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">{{ employee_report.stats.total_completed }}</h5>
+                        <small class="text-muted">مهام مكتملة</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 col-sm-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar flex-shrink-0 me-3">
+                        <span class="avatar-initial rounded bg-label-warning">
+                            <i class="bx bx-time"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">{{ employee_report.stats.total_overdue }}</h5>
+                        <small class="text-muted">مهام متأخرة</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 col-sm-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar flex-shrink-0 me-3">
+                        <span class="avatar-initial rounded bg-label-info">
+                            <i class="bx bx-percentage"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">{{ employee_report.stats.completion_rate }}%</h5>
+                        <small class="text-muted">نسبة الإنجاز</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Report Card -->
+<div class="row">
+    <div class="col-12">
+        <div class="employee-report-card card">
+            <div class="card-header">
+                <div class="employee-info">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar me-3">
+                            {% if employee_report.employee.profile_picture %}
+                            <img src="{{ employee_report.employee.profile_picture.url }}" alt="{{ employee_report.employee.name }}" class="rounded-circle">
+                            {% else %}
+                            <span class="avatar-initial rounded-circle bg-label-primary">
+                                {{ employee_report.employee.name|first|upper }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">{{ employee_report.employee.name }}</h5>
+                            <small class="text-muted">{{ employee_report.employee.job_title }}</small>
+                            <br>
+                            <small class="text-primary">{{ employee_report.employee.get_section_display_arabic }}</small>
+                        </div>
+                    </div>
+                    <div class="report-period">
+                        <h6 class="text-info">
+                            <i class="bx bx-calendar me-1"></i>
+                            تقرير {{ report_date }}
+                        </h6>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <!-- Performance Stats -->
+                <div class="performance-stats mb-4">
+                    <h6 class="section-title mb-3">
+                        <i class="bx bx-chart me-1"></i>
+                        إحصائيات الأداء
+                    </h6>
+                    <div class="row text-center">
+                        <div class="col-3">
+                            <div class="stat-item">
+                                <h6 class="stat-number text-primary">{{ employee_report.stats.total_created }}</h6>
+                                <small class="stat-label">مهام جديدة</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="stat-item">
+                                <h6 class="stat-number text-success">{{ employee_report.stats.total_completed }}</h6>
+                                <small class="stat-label">مكتملة</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="stat-item">
+                                <h6 class="stat-number text-warning">{{ employee_report.stats.total_overdue }}</h6>
+                                <small class="stat-label">متأخرة</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="stat-item">
+                                <h6 class="stat-number text-info">{{ employee_report.stats.completion_rate }}%</h6>
+                                <small class="stat-label">نسبة الإنجاز</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="progress-section mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="progress-label">نسبة الإنجاز الشهري</span>
+                        <span class="progress-percentage">{{ employee_report.stats.completion_rate }}%</span>
+                    </div>
+                    <div class="progress" style="height: 12px;">
+                        <div class="progress-bar 
+                            {% if employee_report.stats.completion_rate >= 80 %}bg-success
+                            {% elif employee_report.stats.completion_rate >= 60 %}bg-info
+                            {% elif employee_report.stats.completion_rate >= 40 %}bg-warning
+                            {% else %}bg-danger
+                            {% endif %}" 
+                            role="progressbar" 
+                            style="width: {{ employee_report.stats.completion_rate }}%">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Monthly Goals Section -->
+                {% if employee_report.monthly_goals %}
+                <div class="goals-section mb-4">
+                    <h6 class="section-title">
+                        <i class="bx bx-target-lock me-1"></i>
+                        أهداف الشهر
+                    </h6>
+                    {% for goal in employee_report.monthly_goals %}
+                    <div class="goal-card">
+                        <div class="goal-header">
+                            <h6 class="goal-title">أهداف {{ goal.month_name }} {{ goal.year }}</h6>
+                            <span class="goals-count badge bg-label-info">{{ goal.goals_count }} هدف</span>
+                        </div>
+                        <div class="goal-content">
+                            <div class="goal-preview">
+                                <pre class="goal-text">{{ goal.goals }}</pre>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- Tasks Sections -->
+                <div class="row">
+                    <!-- Completed Tasks -->
+                    {% if employee_report.tasks_completed %}
+                    <div class="col-md-6 mb-4">
+                        <div class="tasks-section">
+                            <h6 class="section-title">
+                                <i class="bx bx-check-circle me-1"></i>
+                                المهام المكتملة ({{ employee_report.stats.total_completed }})
+                            </h6>
+                            <div class="tasks-list">
+                                {% for task in employee_report.tasks_completed %}
+                                <div class="task-item">
+                                    <div class="task-info">
+                                        <i class="bx bx-check-circle text-success me-2"></i>
+                                        <div class="task-details">
+                                            <span class="task-name">{{ task.name }}</span>
+                                            {% if task.detail %}
+                                            <small class="task-description">{{ task.detail|truncatewords:10 }}</small>
+                                            {% endif %}
+                                            <div class="task-meta">
+                                                {% if task.project %}
+                                                <span class="task-project badge bg-label-secondary">{{ task.project.name }}</span>
+                                                {% endif %}
+                                                <small class="task-date text-muted">
+                                                    <i class="bx bx-calendar me-1"></i>
+                                                    {{ task.updated_at|date:"d/m/Y" }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Overdue Tasks -->
+                    {% if employee_report.overdue_tasks %}
+                    <div class="col-md-6 mb-4">
+                        <div class="tasks-section overdue-tasks">
+                            <h6 class="section-title">
+                                <i class="bx bx-time me-1"></i>
+                                المهام المتأخرة ({{ employee_report.stats.total_overdue }})
+                            </h6>
+                            <div class="tasks-list">
+                                {% for task in employee_report.overdue_tasks %}
+                                <div class="task-item overdue">
+                                    <div class="task-info">
+                                        <i class="bx bx-time text-warning me-2"></i>
+                                        <div class="task-details">
+                                            <span class="task-name">{{ task.name }}</span>
+                                            {% if task.detail %}
+                                            <small class="task-description">{{ task.detail|truncatewords:10 }}</small>
+                                            {% endif %}
+                                            <div class="task-meta">
+                                                {% if task.project %}
+                                                <span class="task-project badge bg-label-secondary">{{ task.project.name }}</span>
+                                                {% endif %}
+                                                {% if task.due_date %}
+                                                <small class="task-date text-danger">
+                                                    <i class="bx bx-calendar me-1"></i>
+                                                    استحقاق: {{ task.due_date|date:"d/m/Y" }}
+                                                </small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Created Tasks -->
+                    {% if employee_report.tasks_created %}
+                    <div class="col-12 mb-4">
+                        <div class="tasks-section">
+                            <h6 class="section-title">
+                                <i class="bx bx-plus-circle me-1"></i>
+                                المهام المنشأة في الشهر ({{ employee_report.stats.total_created }})
+                            </h6>
+                            <div class="tasks-grid">
+                                {% for task in employee_report.tasks_created %}
+                                <div class="task-item-grid">
+                                    <div class="task-status-indicator">
+                                        {% if task.status == 'finished' %}
+                                        <i class="bx bx-check-circle text-success"></i>
+                                        {% else %}
+                                        <i class="bx bx-circle text-info"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="task-content">
+                                        <h6 class="task-title">{{ task.name }}</h6>
+                                        {% if task.detail %}
+                                        <p class="task-desc">{{ task.detail|truncatewords:15 }}</p>
+                                        {% endif %}
+                                        <div class="task-meta-grid">
+                                            <div class="meta-item">
+                                                <small class="text-muted">الحالة:</small>
+                                                <span class="task-status-badge status-{{ task.status }}">
+                                                    {{ task.get_status_display_arabic }}
+                                                </span>
+                                            </div>
+                                            {% if task.project %}
+                                            <div class="meta-item">
+                                                <small class="text-muted">المشروع:</small>
+                                                <span class="badge bg-label-secondary">{{ task.project.name }}</span>
+                                            </div>
+                                            {% endif %}
+                                            {% if task.assigned_to %}
+                                            <div class="meta-item">
+                                                <small class="text-muted">مُعيّن إلى:</small>
+                                                <span class="text-primary">{{ task.assigned_to.name }}</span>
+                                            </div>
+                                            {% endif %}
+                                            <div class="meta-item">
+                                                <small class="text-muted">تاريخ الإنشاء:</small>
+                                                <span>{{ task.created_at|date:"d/m/Y" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Performance Summary -->
+                <div class="performance-summary">
+                    <h6 class="section-title">
+                        <i class="bx bx-chart-area me-1"></i>
+                        ملخص الأداء
+                    </h6>
+                    <div class="summary-content">
+                        <div class="summary-item">
+                            <span class="summary-label">إجمالي المهام:</span>
+                            <span class="summary-value">{{ employee_report.stats.total_tasks }}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">مهام هذا الشهر:</span>
+                            <span class="summary-value">{{ employee_report.stats.total_created }}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">معدل الإنجاز:</span>
+                            <span class="summary-value 
+                                {% if employee_report.stats.completion_rate >= 80 %}text-success
+                                {% elif employee_report.stats.completion_rate >= 60 %}text-info
+                                {% elif employee_report.stats.completion_rate >= 40 %}text-warning
+                                {% else %}text-danger
+                                {% endif %}">
+                                {{ employee_report.stats.completion_rate }}%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <div class="report-meta">
+                    <small class="text-muted">
+                        <i class="bx bx-calendar me-1"></i>
+                        {{ report_date }}
+                    </small>
+                </div>
+                <div class="report-actions">
+                    <a href="{% url 'reports:monthly_print' %}?month={{ selected_month }}&year={{ selected_year }}" 
+                       target="_blank" 
+                       class="btn btn-primary">
+                        <i class="bx bx-printer me-1"></i>
+                        طباعة التقرير
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- No Data State -->
+<div class="row">
+    <div class="col-12">
+        <div class="empty-state">
+            <div class="avatar avatar-xl mx-auto mb-3">
+                <span class="avatar-initial rounded bg-label-secondary">
+                    <i class="bx bx-chart bx-lg"></i>
+                </span>
+            </div>
+            <h5 class="mb-2">لا توجد بيانات للعرض</h5>
+            <p class="text-muted mb-4">لا توجد مهام أو أهداف مسجلة لشهر {{ month_name }} {{ selected_year }}</p>
+            <div class="d-flex justify-content-center gap-2">
+                <a href="{% url 'tasks:my_tasks' %}" class="btn btn-primary">
+                    <i class="bx bx-plus me-1"></i>
+                    إضافة مهمة جديدة
+                </a>
+                <a href="{% url 'tasks:monthly_goals' %}" class="btn btn-outline-primary">
+                    <i class="bx bx-target-lock me-1"></i>
+                    إضافة أهداف شهرية
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Auto-submit filter form on select change
+    $('#monthSelect, #yearSelect').on('change', function() {
+        $('#filterForm').submit();
+    });
+    
+    // Animate progress bars
+    $('.progress-bar').each(function() {
+        const $this = $(this);
+        const width = $this.css('width');
+        $this.css('width', '0%').animate({ width: width }, 1500);
+    });
+    
+    // Animate stats numbers
+    $('.stat-number').each(function() {
+        const $this = $(this);
+        const text = $this.text();
+        const isPercentage = text.includes('%');
+        const finalNumber = parseInt(text);
+        
+        if (!isNaN(finalNumber)) {
+            $this.text('0' + (isPercentage ? '%' : ''));
+            $({ counter: 0 }).animate({
+                counter: finalNumber
+            }, {
+                duration: 1200,
+                step: function() {
+                    $this.text(Math.ceil(this.counter) + (isPercentage ? '%' : ''));
+                },
+                complete: function() {
+                    $this.text(finalNumber + (isPercentage ? '%' : ''));
+                }
+            });
+        }
+    });
+    
+    // Add fade-in animation to cards
+    $('.employee-report-card, .stats-card').addClass('animate-fade-in');
+    
+    // Keyboard shortcuts
+    $(document).on('keydown', function(e) {
+        // Ctrl+P: Print report
+        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+            e.preventDefault();
+            window.open('{% url "reports:monthly_print" %}?month={{ selected_month }}&year={{ selected_year }}', '_blank');
+        }
+    });
+    
+    // Enhanced task items hover effects
+    $('.task-item, .task-item-grid').hover(
+        function() {
+            $(this).addClass('task-hover');
+        },
+        function() {
+            $(this).removeClass('task-hover');
+        }
+    );
+});
+
+// Global function for easy access
+window.printMyReport = function() {
+    window.open('{% url "reports:monthly_print" %}?month={{ selected_month }}&year={{ selected_year }}', '_blank');
+};
+</script>
+{% endblock %}

@@ -1,0 +1,267 @@
+<div class="modal-header">
+    <h5 class="modal-title">
+        <i class="bx bx-building me-2"></i>
+        تفاصيل المشروع - {{ project.name }}
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+    <!-- Project Header -->
+    <div class="project-detail-header">
+        <h4 class="project-detail-title">{{ project.name }}</h4>
+        <div class="project-detail-meta">
+            <span class="project-status-badge status-{{ project.status }}">
+                {{ project.get_status_display_arabic }}
+            </span>
+            {% if project.due_date %}
+            <span class="due-date-indicator {% if project.is_overdue %}overdue{% elif project.days_remaining <= 7 %}due-soon{% else %}normal{% endif %}">
+                <i class="bx bx-calendar"></i>
+                {% if project.is_overdue %}
+                متأخر {{ project.days_remaining|add:"-1" }} يوم
+                {% elif project.days_remaining == 0 %}
+                ينتهي اليوم
+                {% elif project.days_remaining == 1 %}
+                ينتهي غداً
+                {% else %}
+                {{ project.days_remaining }} يوم متبقي
+                {% endif %}
+            </span>
+            {% endif %}
+            <span>
+                <i class="bx bx-chart"></i>
+                {{ project.progress_percentage }}% مكتمل
+            </span>
+        </div>
+    </div>
+    
+    <!-- Project Description -->
+    {% if project.description %}
+    <div class="project-detail-section">
+        <h6>
+            <i class="bx bx-file-text"></i>
+            وصف المشروع
+        </h6>
+        <div class="card bg-light">
+            <div class="card-body">
+                <p class="mb-0">{{ project.description|linebreaks }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Project Information Grid -->
+    <div class="project-detail-section">
+        <h6>
+            <i class="bx bx-info-circle"></i>
+            معلومات المشروع
+        </h6>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label text-muted">الموظف المُعيّن</label>
+                <div class="form-control-plaintext">
+                    {% if project.assigned_employee %}
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-sm me-2">
+                            {% if project.assigned_employee.profile_picture %}
+                            <img src="{{ project.assigned_employee.profile_picture.url }}" alt="{{ project.assigned_employee.name }}" class="rounded-circle">
+                            {% else %}
+                            <span class="avatar-initial rounded-circle bg-label-primary">
+                                {{ project.assigned_employee.name|first|upper }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="fw-semibold">{{ project.assigned_employee.name }}</div>
+                            <small class="text-muted">{{ project.assigned_employee.job_title }}</small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <span class="text-muted fst-italic">غير محدد</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label text-muted">حالة المشروع</label>
+                <div class="form-control-plaintext">
+                    <span class="project-status-badge status-{{ project.status }}">
+                        {{ project.get_status_display_arabic }}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label text-muted">تاريخ الانتهاء</label>
+                <div class="form-control-plaintext">
+                    {% if project.due_date %}
+                    <i class="bx bx-calendar me-1"></i>
+                    {{ project.due_date|date:"d/m/Y" }}
+                    {% if project.is_overdue %}
+                    <span class="badge bg-danger ms-2">متأخر</span>
+                    {% elif project.days_remaining <= 7 %}
+                    <span class="badge bg-warning ms-2">قريب الانتهاء</span>
+                    {% endif %}
+                    {% else %}
+                    <span class="text-muted fst-italic">غير محدد</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label text-muted">التقدم</label>
+                <div class="form-control-plaintext">
+                    <div class="project-progress">
+                        <div class="project-progress-label">
+                            <span>{{ project.progress_percentage }}%</span>
+                        </div>
+                        <div class="project-progress-bar">
+                            <div class="project-progress-fill status-{{ project.status }}" 
+                                 style="width: {{ project.progress_percentage }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Project Creator Information -->
+    <div class="project-detail-section">
+        <h6>
+            <i class="bx bx-user-plus"></i>
+            معلومات المنشئ
+        </h6>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label text-muted">منشئ المشروع</label>
+                <div class="form-control-plaintext">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-sm me-2">
+                            {% if project.created_by.profile_picture %}
+                            <img src="{{ project.created_by.profile_picture.url }}" alt="{{ project.created_by.name }}" class="rounded-circle">
+                            {% else %}
+                            <span class="avatar-initial rounded-circle bg-label-info">
+                                {{ project.created_by.name|first|upper }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="fw-semibold">{{ project.created_by.name }}</div>
+                            <small class="text-muted">{{ project.created_by.job_title }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label text-muted">تاريخ الإنشاء</label>
+                <div class="form-control-plaintext">
+                    <i class="bx bx-calendar me-1"></i>
+                    {{ project.created_at|date:"d/m/Y H:i" }}
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label text-muted">آخر تحديث</label>
+                <div class="form-control-plaintext">
+                    <i class="bx bx-clock me-1"></i>
+                    {{ project.updated_at|date:"d/m/Y H:i" }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Project Tasks Section (Empty for now as requested) -->
+    <div class="project-detail-section">
+        <h6>
+            <i class="bx bx-task"></i>
+            مهام المشروع
+        </h6>
+        <div class="project-tasks-section">
+            <div class="project-tasks-empty">
+                <i class="bx bx-info-circle me-2"></i>
+                سيتم إضافة قسم المهام في المستقبل
+            </div>
+        </div>
+    </div>
+    
+    <!-- Alerts and Warnings -->
+    {% if project.is_overdue %}
+    <div class="alert alert-danger">
+        <h6 class="alert-heading">
+            <i class="bx bx-error-circle me-1"></i>
+            مشروع متأخر!
+        </h6>
+        <p class="mb-2">هذا المشروع متأخر عن الموعد المحدد بـ {{ project.days_remaining|add:"-1" }} يوم.</p>
+        <hr>
+        <p class="mb-0">يرجى متابعة الموظف المُعيّن لتسريع إنجاز المشروع.</p>
+    </div>
+    {% elif project.days_remaining <= 7 and project.days_remaining > 0 %}
+    <div class="alert alert-warning">
+        <h6 class="alert-heading">
+            <i class="bx bx-time me-1"></i>
+            مشروع قريب الانتهاء
+        </h6>
+        <p class="mb-0">باقي {{ project.days_remaining }} أيام على انتهاء المشروع. يرجى متابعة التقدم.</p>
+    </div>
+    {% endif %}
+    
+    <!-- Delete Warning -->
+    {% if not can_delete %}
+    <div class="alert alert-warning">
+        <h6 class="alert-heading">
+            <i class="bx bx-info-circle me-1"></i>
+            تنبيه حول الحذف
+        </h6>
+        <p class="mb-2">لا يمكن حذف هذا المشروع لأنه مرتبط بالعناصر التالية:</p>
+        <ul class="mb-0">
+            {% for blocker in deletion_blockers %}
+            <li>{{ blocker }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+        إغلاق
+    </button>
+
+</div>
+
+<script>
+$(document).ready(function() {
+    // Re-bind event handlers for buttons in this modal
+    $('.project-edit-btn').off('click').on('click', function(e) {
+        e.preventDefault();
+        const projectId = $(this).data('project-id');
+        $('#projectDetailModal').modal('hide');
+        setTimeout(() => {
+            if (window.ProjectManager) {
+                window.ProjectManager.showEditForm(projectId);
+            }
+        }, 300);
+    });
+    
+    $('.project-delete-btn').off('click').on('click', function(e) {
+        e.preventDefault();
+        const projectId = $(this).data('project-id');
+        const projectName = $(this).data('project-name');
+        const canDelete = $(this).data('can-delete');
+        
+        $('#projectDetailModal').modal('hide');
+        setTimeout(() => {
+            if (window.ProjectManager) {
+                window.ProjectManager.showDeleteConfirm(projectId, projectName, canDelete);
+            }
+        }, 300);
+    });
+    
+    // Add animation to progress bar
+    setTimeout(() => {
+        $('.project-progress-fill').css('transition', 'width 1s ease-in-out');
+    }, 300);
+});
+</script>
+

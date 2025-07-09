@@ -1,0 +1,653 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}لوحة التحكم الرئيسية - جمعية إعمار{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard-card {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.notification-item {
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-left: 4px solid;
+    transition: all 0.3s ease;
+}
+
+.notification-item.new-task {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f0f7ff 100%);
+    border-left-color: #2196F3;
+}
+
+.notification-item.completed-task {
+    background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+    border-left-color: #4CAF50;
+}
+
+.notification-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.task-card {
+    border-radius: 12px;
+    border: 1px solid #e3e6f0;
+    padding: 20px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.task-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--priority-color, #ddd);
+}
+
+.task-card.priority-high::before {
+    background: linear-gradient(180deg, #FF5722 0%, #FF8A65 100%);
+}
+
+.task-card.priority-medium::before {
+    background: linear-gradient(180deg, #FF9800 0%, #FFB74D 100%);
+}
+
+.task-card.priority-low::before {
+    background: linear-gradient(180deg, #4CAF50 0%, #81C784 100%);
+}
+
+.task-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.12);
+}
+
+.stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 20px;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.quick-action-btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: none;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.quick-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-complete {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    color: white;
+}
+
+.btn-edit {
+    background: linear-gradient(45deg, #FF9800, #f57c00);
+    color: white;
+}
+
+.btn-detail {
+    background: linear-gradient(45deg, #2196F3, #1976d2);
+    color: white;
+}
+
+.due-date-badge {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.due-today {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+}
+
+.due-soon {
+    background: #fff3e0;
+    color: #ef6c00;
+    border: 1px solid #ffcc02;
+}
+
+.due-normal {
+    background: #e8f5e8;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+.overdue {
+    background: #ffebee;
+    color: #d32f2f;
+    border: 1px solid #ffcdd2;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #f44336;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.section-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: 4px solid #6c757d;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+@media (max-width: 768px) {
+    .quick-actions {
+        flex-direction: column;
+    }
+    
+    .quick-action-btn {
+        justify-content: center;
+    }
+    
+    .task-card {
+        padding: 15px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Welcome Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="dashboard-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex gap-3 flex-wrap">
+                            <span class="badge bg-primary fs-6">{{ total_my_tasks }} مهامي</span>
+                            <span class="badge bg-success fs-6">{{ completed_tasks_today }} مكتملة اليوم</span>
+                            <span class="badge bg-warning fs-6">{{ pending_tasks }} معلقة</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="avatar avatar-xl">
+                            {% if request.user.profile_picture %}
+                            <img src="{{ request.user.profile_picture.url }}" alt="{{ request.user.name }}" class="rounded-circle">
+                            {% else %}
+                            <span class="avatar-initial rounded-circle bg-label-primary" style="font-size: 1.5rem;">
+                                {{ request.user.name|first|upper }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <p class="text-muted mt-2 mb-0">{{ request.user.job_title }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Left Column: Notifications -->
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="dashboard-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bx bx-bell me-2"></i>
+                    الإشعارات
+                    {% if notifications_count > 0 %}
+                    <span class="notification-badge">{{ notifications_count }}</span>
+                    {% endif %}
+                </h5>
+                <a href="{% url 'tasks:my_tasks' %}" class="btn btn-sm btn-outline-primary">
+                    عرض الكل
+                </a>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                {% if notifications %}
+                    {% for notification in notifications %}
+                    <div class="notification-item {{ notification.type }}">
+                        <div class="d-flex align-items-start">
+                            <div class="avatar avatar-sm me-3">
+                                {% if notification.from_user.profile_picture %}
+                                <img src="{{ notification.from_user.profile_picture.url }}" alt="{{ notification.from_user.name }}" class="rounded-circle">
+                                {% else %}
+                                <span class="avatar-initial rounded-circle bg-label-{% if notification.type == 'new-task' %}info{% else %}success{% endif %}">
+                                    {{ notification.from_user.name|first|upper }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold mb-1">
+                                    {% if notification.type == 'new-task' %}
+                                    <i class="bx bx-plus-circle text-info me-1"></i>
+                                    مهمة جديدة مُعيّنة إليك
+                                    {% elif notification.type == 'completed-task' %}
+                                    <i class="bx bx-check-circle text-success me-1"></i>
+                                    تم إكمال مهمة
+                                    {% endif %}
+                                </div>
+                                <p class="mb-1 small">
+                                    <strong>{{ notification.task_name }}</strong>
+                                    {% if notification.type == 'new-task' %}
+                                    من {{ notification.from_user.name }}
+                                    {% else %}
+                                    بواسطة {{ notification.from_user.name }}
+                                    {% endif %}
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="bx bx-time me-1"></i>
+                                        {{ notification.created_at|timesince }} مضت
+                                    </small>
+                                    <a href="{% url 'tasks:my_tasks' %}" class="btn btn-xs btn-outline-primary">
+                                        عرض
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="empty-state">
+                    <i class="bx bx-bell-off"></i>
+                    <h6>لا توجد إشعارات جديدة</h6>
+                    <p class="small text-muted">ستظهر الإشعارات هنا عند تعيين مهام جديدة أو إكمالها</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: My Tasks -->
+    <div class="col-lg-8 col-md-6 mb-4">
+        <div class="dashboard-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bx bx-task me-2"></i>
+                    مهامي الحالية
+                </h5>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'tasks:create_task' %}" class="btn btn-sm btn-success">
+                        <i class="bx bx-plus me-1"></i>
+                        مهمة جديدة
+                    </a>
+                    <a href="{% url 'tasks:my_tasks' %}" class="btn btn-sm btn-primary">
+                        عرض الكل
+                    </a>
+                </div>
+            </div>
+            <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                {% if my_tasks %}
+                    {% for task in my_tasks %}
+                    <div class="task-card priority-{% if task.is_overdue %}high{% elif task.days_remaining <= 3 %}medium{% else %}low{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ task.name }}</h6>
+                                {% if task.detail %}
+                                <p class="text-muted small mb-2">{{ task.detail|truncatewords:10 }}</p>
+                                {% endif %}
+                                
+                                <!-- Task Meta Information -->
+                                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                                    {% if task.project %}
+                                    <span class="badge bg-label-secondary">{{ task.project.name }}</span>
+                                    {% endif %}
+                                    
+                                    {% if task.assigned_to and task.assigned_to != request.user %}
+                                    <span class="badge bg-label-info">
+                                        <i class="bx bx-user me-1"></i>
+                                        مُعيّن إلى: {{ task.assigned_to.name }}
+                                    </span>
+                                    {% elif task.assigned_to == request.user %}
+                                    <span class="badge bg-label-primary">
+                                        <i class="bx bx-user-check me-1"></i>
+                                        مُعيّن إليّ
+                                    </span>
+                                    {% endif %}
+                                    
+                                    {% if task.due_date %}
+                                    <span class="due-date-badge 
+                                        {% if task.is_overdue %}overdue
+                                        {% elif task.days_remaining == 0 %}due-today
+                                        {% elif task.days_remaining <= 3 %}due-soon
+                                        {% else %}due-normal{% endif %}">
+                                        <i class="bx bx-calendar me-1"></i>
+                                        {% if task.is_overdue %}
+                                        متأخر {{ task.days_remaining|add:"-1" }} يوم
+                                        {% elif task.days_remaining == 0 %}
+                                        ينتهي اليوم
+                                        {% elif task.days_remaining == 1 %}
+                                        ينتهي غداً
+                                        {% else %}
+                                        {{ task.days_remaining }} يوم متبقي
+                                        {% endif %}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div class="quick-actions">
+                            {% if task.can_change_status_by %}
+                            <a href="#" class="quick-action-btn btn-complete task-complete-btn" 
+                               data-task-id="{{ task.pk }}" data-task-name="{{ task.name }}">
+                                <i class="bx bx-check"></i>
+                                {% if task.status == 'new' %}إكمال{% else %}إعادة فتح{% endif %}
+                            </a>
+                            {% endif %}
+                            
+                            {% if task.can_be_edited_by %}
+                            <a href="#" class="quick-action-btn btn-edit task-edit-btn" 
+                               data-task-id="{{ task.pk }}">
+                                <i class="bx bx-edit"></i>
+                                تعديل
+                            </a>
+                            {% endif %}
+                            
+                            <a href="#" class="quick-action-btn btn-detail task-detail-btn" 
+                               data-task-id="{{ task.pk }}">
+                                <i class="bx bx-show"></i>
+                                التفاصيل
+                            </a>
+                        </div>
+                        
+                        <!-- Creator Info -->
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2" style="border-top: 1px solid #f0f0f0;">
+                            <small class="text-muted">
+                                <i class="bx bx-user me-1"></i>
+                                منشئ: {{ task.created_by.name }}
+                            </small>
+                            <small class="text-muted">
+                                <i class="bx bx-time me-1"></i>
+                                {{ task.created_at|date:"d/m/Y" }}
+                            </small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="empty-state">
+                    <i class="bx bx-task"></i>
+                    <h6>لا توجد مهام حالياً</h6>
+                    <p class="small text-muted mb-3">ابدأ بإنشاء مهمة جديدة لتنظيم عملك</p>
+                    <a href="{% url 'tasks:create_task' %}" class="btn btn-primary">
+                        <i class="bx bx-plus me-1"></i>
+                        إنشاء مهمة جديدة
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Row -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1">{{ total_my_tasks }}</h3>
+                    <p class="mb-0">إجمالي مهامي</p>
+                </div>
+                <div>
+                    <i class="bx bx-task bx-lg opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1">{{ completed_tasks_today }}</h3>
+                    <p class="mb-0">مكتملة اليوم</p>
+                </div>
+                <div>
+                    <i class="bx bx-check-circle bx-lg opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1">{{ overdue_tasks }}</h3>
+                    <p class="mb-0">مهام متأخرة</p>
+                </div>
+                <div>
+                    <i class="bx bx-error-circle bx-lg opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1">{{ monthly_goals_count }}</h3>
+                    <p class="mb-0">أهداف الشهر</p>
+                </div>
+                <div>
+                    <i class="bx bx-target-lock bx-lg opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Task Action Modals -->
+<div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <!-- Modal content will be loaded here via AJAX -->
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="taskDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <!-- Modal content will be loaded here via AJAX -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Quick task completion
+    $('.task-complete-btn').on('click', function(e) {
+        e.preventDefault();
+        const taskId = $(this).data('task-id');
+        const taskName = $(this).data('task-name');
+        
+        if (confirm(`هل تريد تغيير حالة المهمة "${taskName}"؟`)) {
+            toggleTaskStatus(taskId);
+        }
+    });
+    
+    // Quick task edit
+    $('.task-edit-btn').on('click', function(e) {
+        e.preventDefault();
+        const taskId = $(this).data('task-id');
+        loadTaskModal(`/tasks/tasks/${taskId}/edit/`, '#taskModal');
+    });
+    
+    // Task details
+    $('.task-detail-btn').on('click', function(e) {
+        e.preventDefault();
+        const taskId = $(this).data('task-id');
+        loadTaskModal(`/tasks/tasks/${taskId}/`, '#taskDetailModal');
+    });
+    
+    function toggleTaskStatus(taskId) {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        
+        $.ajax({
+            url: `/tasks/tasks/${taskId}/toggle-status/`,
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            },
+            data: {
+                'csrfmiddlewaretoken': csrfToken
+            },
+            success: function(response) {
+                if (response.success) {
+                    showToast('success', response.message);
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showToast('error', response.error || 'حدث خطأ');
+                }
+            },
+            error: function() {
+                showToast('error', 'حدث خطأ أثناء تحديث المهمة');
+            }
+        });
+    }
+    
+    function loadTaskModal(url, modalSelector) {
+        const modal = $(modalSelector);
+        const modalContent = modal.find('.modal-content');
+        
+        modalContent.html(`
+            <div class="modal-header">
+                <h5 class="modal-title">جاري التحميل...</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">جاري التحميل...</span>
+                </div>
+            </div>
+        `);
+        
+        modal.modal('show');
+        
+        $.ajax({
+            url: url,
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            success: function(response) {
+                modalContent.html(response);
+            },
+            error: function() {
+                modalContent.html(`
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger">خطأ</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center py-5">
+                        <p class="text-muted">حدث خطأ أثناء تحميل البيانات</p>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إغلاق</button>
+                    </div>
+                `);
+            }
+        });
+    }
+    
+    function showToast(type, message) {
+        $('.toast-container').remove();
+        
+        const toastClass = type === 'success' ? 'bg-success' : 'bg-danger';
+        const iconClass = type === 'success' ? 'bx-check' : 'bx-x';
+        
+        const toastHTML = `
+            <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+                <div class="toast show ${toastClass} text-white" role="alert">
+                    <div class="toast-header ${toastClass} text-white border-0">
+                        <i class="bx ${iconClass} me-2"></i>
+                        <strong class="me-auto">${type === 'success' ? 'نجح' : 'خطأ'}</strong>
+                        <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('body').append(toastHTML);
+        
+        setTimeout(() => {
+            $('.toast-container').fadeOut(300, function() {
+                $(this).remove();
+            });
+        }, 3000);
+    }
+    
+    // Auto-refresh notifications every 5 minutes
+    setInterval(function() {
+        // You can implement AJAX call to refresh notifications
+        // without reloading the entire page
+    }, 300000); // 5 minutes
+});
+</script>
+{% endblock %}

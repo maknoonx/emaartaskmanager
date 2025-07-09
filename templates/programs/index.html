@@ -1,0 +1,332 @@
+<!-- programs/templates/programs/index.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.program-card {
+    transition: transform 0.2s ease-in-out;
+    border-radius: 12px;
+    border: 1px solid #e3e6f0;
+}
+.program-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+.program-actions {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.program-card:hover .program-actions {
+    opacity: 1;
+}
+.btn-action {
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 5px;
+    font-size: 14px;
+}
+.stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title mb-1">
+                            <i class="bx bx-folder me-2"></i>
+                            إدارة البرامج
+                        </h4>
+                        <p class="card-subtitle text-muted mb-0">إدارة وتتبع برامج الإسكان</p>
+                    </div>
+                    <a href="{% url 'programs:create' %}" class="btn btn-primary">
+                        <i class="bx bx-plus me-1"></i>
+                        إضافة برنامج جديد
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="stats-card">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h3 class="text-white mb-0">{{ total_programs }}</h3>
+                        <span class="text-white-50">إجمالي البرامج</span>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <i class="bx bx-folder bx-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="d-flex gap-3">
+                        <div class="flex-grow-1">
+                            <input type="text" 
+                                   name="search" 
+                                   class="form-control" 
+                                   placeholder="البحث في البرامج..." 
+                                   value="{{ search_query }}"
+                                   id="searchInput">
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bx bx-search"></i>
+                            بحث
+                        </button>
+                        {% if search_query %}
+                        <a href="{% url 'programs:index' %}" class="btn btn-outline-secondary">
+                            <i class="bx bx-x"></i>
+                            مسح
+                        </a>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Programs Grid -->
+    {% if page_obj %}
+    <div class="row">
+        {% for program in page_obj %}
+        <div class="col-xl-4 col-lg-6 col-md-6 mb-4">
+            <div class="card program-card h-100 position-relative">
+                <!-- Action buttons -->
+                <div class="program-actions">
+                    <a href="{% url 'programs:detail' program.pk %}" 
+                       class="btn btn-info btn-action" 
+                       title="عرض التفاصيل">
+                        <i class="bx bx-show"></i>
+                    </a>
+                    <a href="{% url 'programs:edit' program.pk %}" 
+                       class="btn btn-warning btn-action" 
+                       title="تعديل">
+                        <i class="bx bx-edit"></i>
+                    </a>
+                    <button class="btn btn-danger btn-action" 
+                            title="حذف"
+                            onclick="confirmDelete({{ program.pk }}, '{{ program.name }}')">
+                        <i class="bx bx-trash"></i>
+                    </button>
+                </div>
+
+                <div class="card-body d-flex flex-column">
+                    <!-- Program Icon -->
+                    <div class="text-center mb-3">
+                        <div class="avatar avatar-xl">
+                            <span class="avatar-initial rounded-circle bg-label-primary">
+                                <i class="bx bx-building-house bx-lg"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Program Info -->
+                    <div class="text-center flex-grow-1">
+                        <h5 class="card-title mb-2">{{ program.name }}</h5>
+                        {% if program.description %}
+                        <p class="card-text text-muted small mb-3">
+                            {{ program.description|truncatechars:100 }}
+                        </p>
+                        {% endif %}
+                        
+                        <!-- Program Details -->
+                        <div class="row text-center mb-3">
+                            <div class="col-6">
+                                <div class="d-flex flex-column">
+                                    <span class="badge bg-label-info mb-1">{{ program.number_of_houses }}</span>
+                                    <small class="text-muted">منزل</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="d-flex flex-column">
+                                    <span class="badge bg-label-success mb-1">{{ program.created_at|date:"Y" }}</span>
+                                    <small class="text-muted">سنة الإنشاء</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Address -->
+                        {% if program.address %}
+                        <div class="mb-3">
+                            <small class="text-muted">
+                                <i class="bx bx-map me-1"></i>
+                                {{ program.address|truncatechars:50 }}
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Action Button -->
+                    <div class="text-center mt-auto">
+                        <a href="{% url 'programs:detail' program.pk %}" class="btn btn-primary btn-sm">
+                            <i class="bx bx-show me-1"></i>
+                            عرض المنازل
+                        </a>
+                    </div>
+
+                    <!-- Created Info -->
+                    <div class="text-center mt-2">
+                        <small class="text-muted">
+                            أنشئ بواسطة {{ program.created_by.get_full_name|default:program.created_by.username }}
+                            <br>
+                            {{ program.created_at|date:"d/m/Y" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="Programs pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                            <i class="bx bx-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                            <i class="bx bx-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <div class="misc-wrapper">
+                        <div class="mb-4">
+                            <i class="bx bx-folder-open" style="font-size: 4rem; color: #8592a3;"></i>
+                        </div>
+                        <h4 class="mb-2">
+                            {% if search_query %}
+                            لا توجد نتائج للبحث
+                            {% else %}
+                            لا توجد برامج حتى الآن
+                            {% endif %}
+                        </h4>
+                        <p class="mb-4 text-muted">
+                            {% if search_query %}
+                            لم نجد أي برامج تطابق البحث "{{ search_query }}"
+                            {% else %}
+                            ابدأ بإضافة برنامج جديد لإدارة المنازل
+                            {% endif %}
+                        </p>
+                        {% if search_query %}
+                        <a href="{% url 'programs:index' %}" class="btn btn-outline-primary">
+                            <i class="bx bx-arrow-back me-1"></i>
+                            عودة للبرامج
+                        </a>
+                        {% else %}
+                        <a href="{% url 'programs:create' %}" class="btn btn-primary">
+                            <i class="bx bx-plus me-1"></i>
+                            إضافة برنامج جديد
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(programId, programName) {
+    if (confirm(`هل أنت متأكد من حذف البرنامج "${programName}"؟\n\nسيتم حذف جميع المنازل والبيانات المرتبطة بهذا البرنامج نهائياً.`)) {
+        // Create form and submit
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/programs/${programId}/delete/`;
+        
+        // Add CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfToken) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken.value;
+            form.appendChild(csrfInput);
+        }
+        
+        // Add method override for DELETE
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'DELETE';
+        form.appendChild(methodInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Auto-submit search on Enter
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        this.form.submit();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,992 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - جمعية إعمار{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/monthly_goals.css' %}" />
+<style>
+/* Additional styles for clickable cards and action buttons */
+.monthly-goal-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.monthly-goal-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.goal-actions {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    display: flex;
+    gap: 0.25rem;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.monthly-goal-card:hover .goal-actions {
+    opacity: 1;
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.action-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-edit-action {
+    background: linear-gradient(45deg, #FF9800, #f57c00);
+}
+
+.btn-delete-action {
+    background: linear-gradient(45deg, #f44336, #d32f2f);
+}
+
+.btn-print-action {
+    background: linear-gradient(45deg, #9C27B0, #7B1FA2);
+}
+
+/* Prevent event bubbling on action buttons */
+.goal-actions {
+    pointer-events: none;
+}
+
+.action-btn {
+    pointer-events: all;
+}
+
+.monthly-goal-card-content {
+    pointer-events: none;
+}
+
+.monthly-goal-card-header,
+.monthly-goal-card-body,
+.monthly-goal-card-footer {
+    pointer-events: none;
+}
+
+/* Remove original dropdown styling */
+.monthly-goal-card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- CSRF Token Hidden Input -->
+{% csrf_token %}
+
+<!-- Monthly Goals Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="card-title mb-0">
+                        <i class="bx bx-target-lock me-2"></i>
+                        أهداف الشهر
+                    </h4>
+                    <p class="text-muted mb-0">إدارة وتتبع أهدافك الشهرية</p>
+                </div>
+                <button type="button" class="btn btn-primary" id="addGoalBtn">
+                    <i class="bx bx-plus me-1"></i>
+                    إضافة أهداف جديدة
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 col-sm-6 mb-4">
+        <div class="card goal-stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar flex-shrink-0 me-3">
+                        <span class="avatar-initial rounded bg-label-primary">
+                            <i class="bx bx-target-lock"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">{{ total_goals }}</h5>
+                        <small class="text-muted">إجمالي الأهداف</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 col-sm-6 mb-4">
+        <div class="card goal-stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar flex-shrink-0 me-3">
+                        <span class="avatar-initial rounded bg-label-success">
+                            <i class="bx bx-calendar"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">{{ current_year_goals }}</h5>
+                        <small class="text-muted">أهداف {{ current_year }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 col-sm-6 mb-4">
+        <div class="card goal-stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar flex-shrink-0 me-3">
+                        <span class="avatar-initial rounded bg-label-warning">
+                            <i class="bx bx-time"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">{{ current_year }}</h5>
+                        <small class="text-muted">السنة الحالية</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 col-sm-6 mb-4">
+        <div class="card goal-stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar flex-shrink-0 me-3">
+                        <span class="avatar-initial rounded bg-label-info">
+                            <i class="bx bx-user"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">{{ request.user.name|default:request.user.username }}</h5>
+                        <small class="text-muted">{{ request.user.job_title|default:"موظف" }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Goals Grid -->
+<div class="row">
+    <div class="col-12">
+        {% if monthly_goals %}
+        <div class="monthly-goals-grid">
+            {% for goal in monthly_goals %}
+            {% with current_month=goal.month current_year_check=goal.year %}
+            <div class="monthly-goal-card animate-fade-in 
+                        {% now 'm' as now_month %}{% now 'Y' as now_year %}
+                        {% if goal.month == now_month|add:'0' and goal.year == now_year|add:'0' %}current-month
+                        {% elif goal.year < now_year|add:'0' or goal.year == now_year|add:'0' and goal.month < now_month|add:'0' %}past-month
+                        {% else %}future-month{% endif %}"
+                 data-goal-id="{{ goal.pk }}">
+                
+                <!-- Action buttons (show on hover) -->
+                <div class="goal-actions">
+                    <button type="button" class="action-btn btn-edit-action" 
+                            title="تعديل" onclick="event.stopPropagation(); MonthlyGoalsManager.showEditForm({{ goal.pk }})">
+                        <i class="bx bx-edit"></i>
+                    </button>
+                    <button type="button" class="action-btn btn-print-action" 
+                            title="طباعة" onclick="event.stopPropagation(); MonthlyGoalsManager.printGoal({{ goal.pk }})">
+                        <i class="bx bx-printer"></i>
+                    </button>
+                    <button type="button" class="action-btn btn-delete-action" 
+                            title="حذف" onclick="event.stopPropagation(); MonthlyGoalsManager.showDeleteConfirm({{ goal.pk }}, '{{ goal.month_year_display }}')">
+                        <i class="bx bx-trash"></i>
+                    </button>
+                </div>
+                
+                <div class="monthly-goal-card-content">
+                    <div class="monthly-goal-card-header">
+                        <div class="monthly-goal-card-title">
+                            <span>{{ goal.month_name }} {{ goal.year }}</span>
+                        </div>
+                        <div class="monthly-goal-card-meta">
+                            <span class="goal-count-badge">{{ goal.goals_count }} هدف</span>
+                            {% now 'm' as now_month %}{% now 'Y' as now_year %}
+                            {% if goal.month == now_month|add:'0' and goal.year == now_year|add:'0' %}
+                            <span class="month-status-indicator month-status-current">الشهر الحالي</span>
+                            {% elif goal.year < now_year|add:'0' or goal.year == now_year|add:'0' and goal.month < now_month|add:'0' %}
+                            <span class="month-status-indicator month-status-past">شهر سابق</span>
+                            {% else %}
+                            <span class="month-status-indicator month-status-future">شهر قادم</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="monthly-goal-card-body">
+                        <div class="monthly-goal-preview">
+                            {{ goal.goals|truncatewords:20 }}
+                        </div>
+                    </div>
+                    
+                    <div class="monthly-goal-card-footer">
+                        <span class="goal-date-info">
+                            <i class="bx bx-time"></i>
+                            {{ goal.created_at|date:"d/m/Y" }}
+                        </span>
+                        {% if goal.updated_at != goal.created_at %}
+                        <span class="goal-date-info">
+                            <i class="bx bx-edit"></i>
+                            {{ goal.updated_at|date:"d/m/Y" }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endwith %}
+            {% endfor %}
+        </div>
+        
+        {% else %}
+        <div class="empty-state">
+            <div class="avatar avatar-xl mx-auto mb-3">
+                <span class="avatar-initial rounded bg-label-secondary">
+                    <i class="bx bx-target-lock bx-lg"></i>
+                </span>
+            </div>
+            <h5 class="mb-2">لا توجد أهداف شهرية</h5>
+            <p class="text-muted mb-4">لم تقم بإضافة أي أهداف شهرية بعد. ابدأ بوضع أهدافك لهذا الشهر!</p>
+            <button type="button" class="btn btn-primary" id="addFirstGoalBtn">
+                <i class="bx bx-plus me-1"></i>
+                إضافة أول هدف شهري
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Monthly Goal Form Modal -->
+<div class="modal fade" id="goalModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <!-- Modal content will be loaded here via AJAX -->
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Goal Detail Modal -->
+<div class="modal fade" id="goalDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <!-- Modal content will be loaded here via AJAX -->
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <div class="avatar avatar-xl mx-auto mb-3">
+                        <span class="avatar-initial rounded bg-label-danger">
+                            <i class="bx bx-trash bx-lg"></i>
+                        </span>
+                    </div>
+                    <h5 class="mb-2">هل أنت متأكد؟</h5>
+                    <p class="text-muted mb-4" id="deleteConfirmText">
+                        هل تريد حذف أهداف هذا الشهر؟ لن يمكن التراجع عن هذا الإجراء.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+console.log('Monthly Goals JavaScript loading...');
+
+/**
+ * Monthly Goals Management JavaScript
+ * Handles all monthly goals related functionality including CRUD operations
+ */
+
+const MonthlyGoalsManager = {
+    // Configuration
+    config: {
+        toastDuration: 3000,
+        apiHeaders: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    },
+
+    // Initialize the monthly goals manager
+    init() {
+        console.log('Initializing MonthlyGoalsManager...');
+        this.bindEvents();
+        this.setupCSRFToken();
+        this.initializeCardClickHandlers();
+        console.log('MonthlyGoalsManager initialized successfully');
+    },
+
+    // Bind all event listeners
+    bindEvents() {
+        console.log('Binding events...');
+        $(document).on('submit', '#goalForm', this.handleFormSubmit.bind(this));
+        $('#goalModal, #goalDetailModal').on('hidden.bs.modal', this.cleanupModal.bind(this));
+        $('#confirmDeleteBtn').on('click', this.confirmDelete.bind(this));
+        $(document).on('keydown', this.handleKeyboardShortcuts.bind(this));
+        
+        // Make goal cards clickable
+        $(document).on('click', '.monthly-goal-card', function(e) {
+            // Don't trigger if clicking on action buttons
+            if ($(e.target).closest('.goal-actions').length) {
+                return;
+            }
+            
+            const goalId = $(this).data('goal-id');
+            if (goalId) {
+                MonthlyGoalsManager.showDetail(goalId);
+            }
+        });
+    },
+
+    // Setup CSRF token for AJAX requests
+    setupCSRFToken() {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        console.log('CSRF Token found:', csrfToken ? 'Yes' : 'No');
+        if (csrfToken) {
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    if (!this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                    }
+                }
+            });
+        }
+    },
+
+    // Initialize card click handlers
+    initializeCardClickHandlers() {
+        $('.monthly-goal-card').on('click', function(e) {
+            // Don't trigger if clicking on action buttons
+            if ($(e.target).closest('.goal-actions').length > 0) {
+                return;
+            }
+            
+            const goalId = $(this).data('goal-id');
+            console.log('Card clicked, goal ID:', goalId);
+            MonthlyGoalsManager.showDetail(goalId);
+        });
+    },
+
+    // Show add goal form
+    showAddForm() {
+        console.log('Showing add form...');
+        this.loadModal('/tasks/monthly-goals/create/', '#goalModal', 'إضافة أهداف جديدة');
+    },
+
+    // Show edit goal form
+    showEditForm(goalId) {
+        console.log('Showing edit form for goal:', goalId);
+        this.loadModal(`/tasks/monthly-goals/${goalId}/edit/`, '#goalModal', 'تعديل الأهداف');
+    },
+
+    // Show goal details
+    showDetail(goalId) {
+        console.log('Showing detail for goal:', goalId);
+        this.loadModal(`/tasks/monthly-goals/${goalId}/`, '#goalDetailModal', 'تفاصيل الأهداف');
+    },
+
+    // Print goal functionality
+    printGoal(goalId) {
+        // Create a new window for printing
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        
+        // Show loading in the new window
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>طباعة الأهداف الشهرية</title>
+                    <style>
+                        body { 
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                            direction: rtl; 
+                            text-align: right;
+                            padding: 20px;
+                        }
+                        .loading { 
+                            text-align: center; 
+                            padding: 50px; 
+                            color: #666;
+                        }
+                        @media print {
+                            body { margin: 0; }
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="loading">
+                        <h3>جاري تحميل الأهداف الشهرية...</h3>
+                        <p>يرجى الانتظار</p>
+                    </div>
+                </body>
+            </html>
+        `);
+        
+        // Fetch goal details and prepare for printing
+        $.ajax({
+            url: `/tasks/monthly-goals/${goalId}/`,
+            method: 'GET',
+            headers: this.config.apiHeaders,
+            success: function(response) {
+                // Extract goal data from the response
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(response, 'text/html');
+                
+                // Create print-friendly content
+                const printContent = this.generatePrintContent(doc, goalId);
+                
+                // Replace the loading content
+                printWindow.document.body.innerHTML = printContent;
+                
+                // Add print styles
+                const printStyles = `
+                    <style>
+                        body {
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            direction: rtl;
+                            text-align: right;
+                            margin: 0;
+                            padding: 20px;
+                            color: #333;
+                            line-height: 1.6;
+                        }
+                        .print-header {
+                            border-bottom: 3px solid #007AFF;
+                            padding-bottom: 20px;
+                            margin-bottom: 30px;
+                        }
+                        .print-title {
+                            color: #007AFF;
+                            font-size: 24px;
+                            font-weight: bold;
+                            margin-bottom: 10px;
+                        }
+                        .print-subtitle {
+                            color: #666;
+                            font-size: 14px;
+                            margin-bottom: 5px;
+                        }
+                        .print-date {
+                            color: #999;
+                            font-size: 12px;
+                        }
+                        .section {
+                            margin-bottom: 25px;
+                            page-break-inside: avoid;
+                        }
+                        .section-title {
+                            color: #007AFF;
+                            font-size: 16px;
+                            font-weight: bold;
+                            border-bottom: 1px solid #ddd;
+                            padding-bottom: 5px;
+                            margin-bottom: 15px;
+                        }
+                        .goals-content {
+                            background: #f9f9f9;
+                            padding: 20px;
+                            border-radius: 8px;
+                            border-left: 4px solid #007AFF;
+                        }
+                        .month-badge {
+                            display: inline-block;
+                            padding: 8px 16px;
+                            background: #007AFF;
+                            color: white;
+                            border-radius: 20px;
+                            font-weight: bold;
+                            margin-bottom: 20px;
+                        }
+                        @media print {
+                            body { 
+                                margin: 0; 
+                                font-size: 12px;
+                            }
+                            .no-print { 
+                                display: none; 
+                            }
+                            .section {
+                                page-break-inside: avoid;
+                            }
+                        }
+                    </style>
+                `;
+                printWindow.document.head.innerHTML += printStyles;
+                
+                // Auto print after a short delay
+                setTimeout(() => {
+                    printWindow.print();
+                }, 500);
+                
+                this.showToast('success', 'تم تحضير الأهداف للطباعة');
+            }.bind(this),
+            error: function() {
+                printWindow.close();
+                this.showToast('error', 'فشل في تحميل الأهداف للطباعة');
+            }.bind(this)
+        });
+    },
+
+    generatePrintContent(doc, goalId) {
+        // Extract goal information from the modal content
+        const title = doc.querySelector('.modal-title')?.textContent || 'الأهداف الشهرية';
+        const currentDate = new Date().toLocaleDateString('ar-SA');
+        
+        return `
+            <div class="print-header">
+                <div class="print-title">جمعية إعمار - الأهداف الشهرية</div>
+                <div class="print-subtitle">${title}</div>
+                <div class="print-date">تاريخ الطباعة: ${currentDate}</div>
+            </div>
+            
+            <div class="section">
+                <div class="month-badge">الأهداف الشهرية #${goalId}</div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">معلومات أساسية</div>
+                <div class="goals-content">
+                    <p><strong>رقم الهدف:</strong> #${goalId}</p>
+                    <p><strong>تاريخ الطباعة:</strong> ${currentDate}</p>
+                    <p><strong>الموظف:</strong> ${$('#goalDetailModal').find('.user-info')?.text() || 'غير محدد'}</p>
+                </div>
+            </div>
+            
+            <div class="section no-print">
+                <button onclick="window.print()" style="background: #007AFF; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-left: 10px;">
+                    طباعة
+                </button>
+                <button onclick="window.close()" style="background: #666; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                    إغلاق
+                </button>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">ملاحظة</div>
+                <p>تم إنشاء هذا التقرير تلقائياً من نظام إدارة جمعية إعمار. لمزيد من التفاصيل، يرجى مراجعة النظام مباشرة.</p>
+            </div>
+        `;
+    },
+
+    // Load modal content via AJAX
+    loadModal(url, modalSelector, title) {
+        console.log('Loading modal from URL:', url);
+        const modal = $(modalSelector);
+        const modalContent = modal.find('.modal-content');
+        
+        modalContent.html(this.getLoadingHTML(title));
+        modal.modal('show');
+        
+        $.ajax({
+            url: url,
+            method: 'GET',
+            headers: this.config.apiHeaders,
+            success: function(response) {
+                console.log('Modal loaded successfully');
+                modalContent.html(response);
+                this.initializeModalComponents();
+            }.bind(this),
+            error: function(xhr, status, error) {
+                console.error('Modal load error:', xhr.status, error);
+                console.error('Response:', xhr.responseText);
+                modalContent.html(this.getErrorHTML('حدث خطأ أثناء تحميل البيانات: ' + error));
+                this.showToast('error', 'فشل تحميل البيانات');
+            }.bind(this)
+        });
+    },
+
+    // Handle form submission
+    handleFormSubmit(e) {
+        e.preventDefault();
+        console.log('Form submitted');
+        
+        const form = $(e.target);
+        const submitBtn = form.find('button[type="submit"]');
+        const btnText = submitBtn.find('.btn-text');
+        const spinner = submitBtn.find('.spinner-border');
+        
+        if (!this.validateForm(form)) {
+            return;
+        }
+        
+        this.setLoadingState(submitBtn, btnText, spinner, true);
+        
+        $.ajax({
+            url: form.attr('action'),
+            method: 'POST',
+            data: form.serialize(),
+            headers: this.config.apiHeaders,
+            success: function(response) {
+                console.log('Form submission success:', response);
+                if (response.success) {
+                    this.showToast('success', response.message);
+                    this.closeModal();
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    this.showFormErrors(response.error || response.errors);
+                }
+            }.bind(this),
+            error: function(xhr) {
+                console.error('Form submission error:', xhr.status, xhr.responseText);
+                const errorMessage = this.parseErrorResponse(xhr);
+                this.showFormErrors(errorMessage);
+            }.bind(this),
+            complete: function() {
+                this.setLoadingState(submitBtn, btnText, spinner, false);
+            }.bind(this)
+        });
+    },
+
+    // Validate form before submission
+    validateForm(form) {
+        let isValid = true;
+        const errors = [];
+        
+        const month = form.find('select[name="month"]').val();
+        const year = form.find('select[name="year"]').val();
+        const goals = form.find('textarea[name="goals"]').val().trim();
+        
+        if (!month) {
+            errors.push('يجب اختيار الشهر');
+            isValid = false;
+        }
+        
+        if (!year) {
+            errors.push('يجب اختيار السنة');
+            isValid = false;
+        }
+        
+        if (!goals) {
+            errors.push('يجب إدخال الأهداف');
+            form.find('textarea[name="goals"]').addClass('is-invalid');
+            isValid = false;
+        } else {
+            form.find('textarea[name="goals"]').removeClass('is-invalid');
+        }
+        
+        if (goals.length < 10) {
+            errors.push('الأهداف قصيرة جداً، يجب أن تكون 10 أحرف على الأقل');
+            form.find('textarea[name="goals"]').addClass('is-invalid');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            this.showFormErrors(errors);
+        }
+        
+        return isValid;
+    },
+
+    // Show form validation errors
+    showFormErrors(errors) {
+        const errorAlert = $('#formErrorAlert');
+        const errorList = $('#formErrorList');
+        
+        if (typeof errors === 'string') {
+            errors = [errors];
+        }
+        
+        if (errors && errors.length > 0) {
+            const errorItems = errors.map(error => `<li>${error}</li>`).join('');
+            errorList.html(errorItems);
+            errorAlert.removeClass('d-none');
+            
+            errorAlert[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    },
+
+    // Show delete confirmation modal
+    showDeleteConfirm(goalId, goalName) {
+        const modal = $('#deleteConfirmModal');
+        const confirmBtn = $('#confirmDeleteBtn');
+        const confirmText = $('#deleteConfirmText');
+        
+        confirmBtn.data('goal-id', goalId);
+        confirmText.text(`هل تريد حذف أهداف "${goalName}"؟ لن يمكن التراجع عن هذا الإجراء.`);
+        
+        modal.modal('show');
+    },
+
+    // Confirm delete action
+    confirmDelete() {
+        const btn = $('#confirmDeleteBtn');
+        const goalId = btn.data('goal-id');
+        
+        if (!goalId) return;
+        
+        const originalText = btn.html();
+        btn.html('<span class="spinner-border spinner-border-sm me-1"></span>جاري الحذف...');
+        btn.prop('disabled', true);
+        
+        $.ajax({
+            url: `/tasks/monthly-goals/${goalId}/delete/`,
+            method: 'POST',
+            headers: this.config.apiHeaders,
+            success: function(response) {
+                if (response.success) {
+                    this.showToast('success', response.message);
+                    $('#deleteConfirmModal').modal('hide');
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    this.showToast('error', response.error || 'حدث خطأ أثناء الحذف');
+                }
+            }.bind(this),
+            error: function() {
+                this.showToast('error', 'حدث خطأ أثناء حذف الأهداف');
+            }.bind(this),
+            complete: function() {
+                btn.html(originalText);
+                btn.prop('disabled', false);
+            }
+        });
+    },
+
+    // Handle keyboard shortcuts
+    handleKeyboardShortcuts(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault();
+            this.showAddForm();
+        }
+        
+        if (e.key === 'Escape') {
+            $('.modal.show').modal('hide');
+        }
+    },
+
+    // Set loading state for buttons
+    setLoadingState(btn, btnText, spinner, isLoading) {
+        if (isLoading) {
+            btn.prop('disabled', true);
+            if (btnText.length) btnText.addClass('d-none');
+            if (spinner.length) spinner.removeClass('d-none');
+        } else {
+            btn.prop('disabled', false);
+            if (btnText.length) btnText.removeClass('d-none');
+            if (spinner.length) spinner.addClass('d-none');
+        }
+    },
+
+    // Close active modal
+    closeModal() {
+        $('.modal.show').modal('hide');
+    },
+
+    // Clean up modal content
+    cleanupModal() {
+        $('#formErrorAlert').addClass('d-none');
+        $('.is-invalid').removeClass('is-invalid');
+        $('#goalForm')[0]?.reset();
+        
+        setTimeout(() => {
+            $('.modal-content').empty();
+        }, 300);
+    },
+
+    // Initialize components in loaded modal content
+    initializeModalComponents() {
+        setTimeout(() => {
+            $('.modal.show').find('textarea:first').focus();
+        }, 100);
+    },
+
+    // Show toast notification
+    showToast(type, message) {
+        $('.toast-container').remove();
+        
+        const toastClass = type === 'success' ? 'bg-success' : 'bg-danger';
+        const iconClass = type === 'success' ? 'bx-check' : 'bx-x';
+        
+        const toastHTML = `
+            <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+                <div class="toast show ${toastClass} text-white" role="alert">
+                    <div class="toast-header ${toastClass} text-white border-0">
+                        <i class="bx ${iconClass} me-2"></i>
+                        <strong class="me-auto">${type === 'success' ? 'نجح' : 'خطأ'}</strong>
+                        <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('body').append(toastHTML);
+        
+        setTimeout(() => {
+            $('.toast-container').fadeOut(300, function() {
+                $(this).remove();
+            });
+        }, this.config.toastDuration);
+    },
+
+    // Get loading HTML for modals
+    getLoadingHTML(title) {
+        return `
+            <div class="modal-header">
+                <h5 class="modal-title">${title}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">جاري التحميل...</span>
+                </div>
+                <p class="text-muted">جاري تحميل البيانات...</p>
+            </div>
+        `;
+    },
+
+    // Get error HTML for modals
+    getErrorHTML(message) {
+        return `
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">خطأ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <div class="avatar avatar-xl mx-auto mb-3">
+                    <span class="avatar-initial rounded bg-label-danger">
+                        <i class="bx bx-error bx-lg"></i>
+                    </span>
+                </div>
+                <h6 class="mb-2">حدث خطأ</h6>
+                <p class="text-muted mb-4">${message}</p>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        `;
+    },
+
+    // Parse error response from server
+    parseErrorResponse(xhr) {
+        let errorMessage = 'حدث خطأ غير متوقع';
+        
+        if (xhr.responseJSON) {
+            if (xhr.responseJSON.error) {
+                errorMessage = xhr.responseJSON.error;
+            } else if (xhr.responseJSON.errors) {
+                if (Array.isArray(xhr.responseJSON.errors)) {
+                    errorMessage = xhr.responseJSON.errors.join(', ');
+                } else {
+                    errorMessage = Object.values(xhr.responseJSON.errors).join(', ');
+                }
+            }
+        } else if (xhr.status === 400) {
+            errorMessage = 'البيانات المدخلة غير صحيحة';
+        } else if (xhr.status === 403) {
+            errorMessage = 'ليس لديك صلاحية لتنفيذ هذا الإجراء';
+        } else if (xhr.status === 404) {
+            errorMessage = 'الأهداف المطلوبة غير موجودة';
+        } else if (xhr.status === 500) {
+            errorMessage = 'خطأ في الخادم، يرجى المحاولة لاحقاً';
+        }
+        
+        return errorMessage;
+    }
+};
+
+// Initialize when document is ready
+$(document).ready(function() {
+    console.log('Document ready, starting initialization...');
+    
+    // Test jQuery
+    if (typeof $ === 'undefined') {
+        console.error('jQuery is not loaded!');
+        alert('jQuery غير محمل! تأكد من تحميل المكتبة');
+        return;
+    }
+    
+    // Test Bootstrap
+    if (typeof bootstrap === 'undefined') {
+        console.error('Bootstrap is not loaded!');
+        alert('Bootstrap غير محمل! تأكد من تحميل المكتبة');
+        return;
+    }
+    
+    console.log('jQuery and Bootstrap are loaded, initializing MonthlyGoalsManager...');
+    MonthlyGoalsManager.init();
+    
+    // Handle add goal button clicks
+    $('#addGoalBtn, #addFirstGoalBtn').on('click', function() {
+        console.log('Add goal button clicked');
+        MonthlyGoalsManager.showAddForm();
+    });
+    
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', function(e) {
+        if ($('.modal.show').length > 0) {
+            $('.modal.show').modal('hide');
+        }
+    });
+    
+    // Prevent form resubmission on page refresh
+    if (window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.href);
+    }
+    
+    console.log('All event handlers bound successfully');
+});
+
+// Make MonthlyGoalsManager globally accessible for debugging
+window.MonthlyGoalsManager = MonthlyGoalsManager;
+
+// Global debug function
+window.testModal = function() {
+    console.log('Testing modal...');
+    $('#goalModal').modal('show');
+    $('#goalModal .modal-content').html(`
+        <div class="modal-header">
+            <h5 class="modal-title">اختبار</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            <p>هذا اختبار للـ modal</p>
+        </div>
+    `);
+};
+
+console.log('Monthly Goals JavaScript loaded completely');
+</script>
+{% endblock %}

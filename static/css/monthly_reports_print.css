@@ -1,0 +1,816 @@
+/* Monthly Reports Print Styles - Arabic RTL A4 Print Layout */
+
+/* ====== PRINT SPECIFIC VARIABLES ====== */
+:root {
+    --print-primary: #007AFF;
+    --print-success: #34C759;
+    --print-warning: #FF9500;
+    --print-danger: #FF3B30;
+    --print-info: #AF52DE;
+    --print-black: #000000;
+    --print-gray-light: #F5F5F5;
+    --print-gray-medium: #CCCCCC;
+    --print-gray-dark: #666666;
+    --print-font-family: 'Cairo', 'Arial', sans-serif;
+}
+
+/* ====== GLOBAL RESET FOR PRINT ====== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    direction: rtl;
+    font-family: var(--print-font-family);
+}
+
+body {
+    font-family: var(--print-font-family);
+    font-size: 12pt;
+    line-height: 1.4;
+    color: var(--print-black);
+    background: white;
+    margin: 0;
+    padding: 0;
+}
+
+/* ====== PAGE LAYOUT FOR A4 ====== */
+@page {
+    size: A4;
+    margin: 2cm 1.5cm;
+}
+
+.print-container {
+    max-width: 100%;
+    margin: 0 auto;
+    background: white;
+    min-height: 100vh;
+    padding: 0;
+}
+
+/* ====== HEADER SECTION ====== */
+.report-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+}
+
+.header-content {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-bottom: 1rem;
+}
+
+.logo-section {
+    flex-shrink: 0;
+}
+
+.company-logo {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+}
+
+.company-info {
+    flex: 1;
+    text-align: center;
+}
+
+.company-name {
+    font-size: 24pt;
+    font-weight: 700;
+    color: var(--print-primary);
+    margin-bottom: 0.5rem;
+}
+
+.company-subtitle {
+    font-size: 14pt;
+    color: var(--print-gray-dark);
+    margin: 0;
+}
+
+.report-info {
+    flex-shrink: 0;
+    text-align: left;
+}
+
+.report-title {
+    font-size: 18pt;
+    font-weight: 600;
+    color: var(--print-black);
+    margin-bottom: 0.5rem;
+}
+
+.report-period {
+    font-size: 14pt;
+    font-weight: 500;
+    color: var(--print-primary);
+    margin-bottom: 0.25rem;
+}
+
+.print-date {
+    font-size: 10pt;
+    color: var(--print-gray-dark);
+    margin: 0;
+}
+
+.header-divider {
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to left, var(--print-primary), var(--print-info));
+    margin-top: 1rem;
+}
+
+/* ====== SECTION STYLES ====== */
+section {
+    margin-bottom: 2rem;
+    page-break-inside: avoid;
+}
+
+.section-title {
+    font-size: 16pt;
+    font-weight: 600;
+    color: var(--print-primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--print-gray-medium);
+    padding-bottom: 0.5rem;
+}
+
+.section-title i {
+    margin-left: 0.5rem;
+    font-size: 18pt;
+}
+
+/* ====== EMPLOYEE SECTION ====== */
+.employee-section {
+    background: var(--print-gray-light);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--print-gray-medium);
+}
+
+.employee-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-label {
+    font-weight: 600;
+    color: var(--print-gray-dark);
+    min-width: 120px;
+}
+
+.info-value {
+    font-weight: 500;
+    color: var(--print-black);
+    flex: 1;
+}
+
+/* ====== SUMMARY SECTION ====== */
+.summary-section {
+    background: white;
+    border: 1px solid var(--print-gray-medium);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--print-gray-medium);
+    border-radius: 6px;
+    background: white;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18pt;
+    color: white;
+    flex-shrink: 0;
+}
+
+.stat-primary .stat-icon {
+    background: var(--print-primary);
+}
+
+.stat-success .stat-icon {
+    background: var(--print-success);
+}
+
+.stat-warning .stat-icon {
+    background: var(--print-warning);
+}
+
+.stat-info .stat-icon {
+    background: var(--print-info);
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 20pt;
+    font-weight: 700;
+    color: var(--print-black);
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    font-size: 10pt;
+    color: var(--print-gray-dark);
+    font-weight: 500;
+}
+
+/* ====== GOALS SECTION ====== */
+.goals-section {
+    background: rgba(175, 82, 222, 0.05);
+    border: 1px solid rgba(175, 82, 222, 0.2);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.goal-card {
+    background: white;
+    border: 1px solid var(--print-gray-medium);
+    border-radius: 6px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.goal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--print-gray-medium);
+}
+
+.goal-title {
+    font-size: 14pt;
+    font-weight: 600;
+    color: var(--print-black);
+    margin: 0;
+}
+
+.goal-count {
+    font-size: 10pt;
+    background: var(--print-info);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.goal-content {
+    margin-top: 1rem;
+}
+
+.goal-text {
+    font-family: var(--print-font-family);
+    font-size: 11pt;
+    line-height: 1.6;
+    color: var(--print-black);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background: var(--print-gray-light);
+    padding: 1rem;
+    border-radius: 4px;
+    border: 1px solid var(--print-gray-medium);
+}
+
+/* ====== TASKS SECTION ====== */
+.tasks-section {
+    background: white;
+    border: 1px solid var(--print-gray-medium);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.overdue-section {
+    background: rgba(255, 149, 0, 0.05);
+    border-color: rgba(255, 149, 0, 0.2);
+}
+
+.tasks-table {
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.task-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+}
+
+.task-table th {
+    background: var(--print-gray-light);
+    border: 1px solid var(--print-gray-medium);
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    font-weight: 600;
+    color: var(--print-black);
+}
+
+.task-table td {
+    border: 1px solid var(--print-gray-medium);
+    padding: 0.75rem 0.5rem;
+    vertical-align: top;
+}
+
+.task-number {
+    width: 8%;
+    text-align: center;
+    font-weight: 600;
+}
+
+.task-name {
+    width: 40%;
+}
+
+.task-project {
+    width: 20%;
+    text-align: center;
+}
+
+.task-date {
+    width: 15%;
+    text-align: center;
+}
+
+.task-status {
+    width: 17%;
+    text-align: center;
+}
+
+.task-name-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.task-title {
+    font-weight: 600;
+    color: var(--print-black);
+    line-height: 1.3;
+}
+
+.task-description {
+    font-size: 9pt;
+    color: var(--print-gray-dark);
+    line-height: 1.4;
+}
+
+.no-project {
+    font-style: italic;
+    color: var(--print-gray-dark);
+}
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 9pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-completed {
+    background: var(--print-success);
+    color: white;
+}
+
+.status-overdue {
+    background: var(--print-warning);
+    color: white;
+}
+
+/* ====== NO DATA SECTION ====== */
+.no-data-section {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: var(--print-gray-light);
+    border: 1px solid var(--print-gray-medium);
+    border-radius: 8px;
+}
+
+.no-data-content i {
+    font-size: 48pt;
+    color: var(--print-gray-medium);
+    margin-bottom: 1rem;
+}
+
+.no-data-content h4 {
+    font-size: 16pt;
+    font-weight: 600;
+    color: var(--print-gray-dark);
+    margin-bottom: 0.5rem;
+}
+
+.no-data-content p {
+    font-size: 12pt;
+    color: var(--print-gray-dark);
+    margin: 0;
+}
+
+/* ====== FOOTER SECTION ====== */
+.report-footer {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid var(--print-gray-medium);
+    position: relative;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 2rem;
+}
+
+.footer-left {
+    flex: 1;
+}
+
+.generated-by {
+    font-size: 10pt;
+    color: var(--print-gray-dark);
+    margin-bottom: 0.25rem;
+}
+
+.print-info {
+    font-size: 9pt;
+    color: var(--print-gray-dark);
+    margin: 0;
+}
+
+.footer-right {
+    flex-shrink: 0;
+}
+
+.signature-section {
+    text-align: center;
+    min-width: 200px;
+}
+
+.signature-line {
+    width: 200px;
+    height: 1px;
+    background: var(--print-black);
+    margin-bottom: 0.5rem;
+}
+
+.signature-label {
+    font-size: 10pt;
+    color: var(--print-gray-dark);
+    margin: 0;
+}
+
+/* ====== PRINT SPECIFIC STYLES ====== */
+@media print {
+    body {
+        background: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    .print-container {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* Ensure colors are preserved */
+    .company-name,
+    .report-title,
+    .report-period,
+    .section-title {
+        color: #007AFF !important;
+    }
+    
+    .stat-primary .stat-icon {
+        background: #007AFF !important;
+    }
+    
+    .stat-success .stat-icon {
+        background: #34C759 !important;
+    }
+    
+    .stat-warning .stat-icon {
+        background: #FF9500 !important;
+    }
+    
+    .stat-info .stat-icon {
+        background: #AF52DE !important;
+    }
+    
+    .status-completed {
+        background: #34C759 !important;
+        color: white !important;
+    }
+    
+    .status-overdue {
+        background: #FF9500 !important;
+        color: white !important;
+    }
+    
+    .goal-count {
+        background: #AF52DE !important;
+        color: white !important;
+    }
+    
+    .header-divider {
+        background: linear-gradient(to left, #007AFF, #AF52DE) !important;
+    }
+    
+    /* Page breaks */
+    .employee-section,
+    .summary-section,
+    .goals-section,
+    .tasks-section {
+        page-break-inside: avoid;
+    }
+    
+    .task-table tr {
+        page-break-inside: avoid;
+    }
+    
+    /* Hide elements that shouldn't print */
+    button,
+    .no-print {
+        display: none !important;
+    }
+}
+
+/* ====== RESPONSIVE ADJUSTMENTS FOR SMALLER PRINTS ====== */
+@media print and (max-width: 21cm) {
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .company-logo {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .employee-info-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .task-table {
+        font-size: 9pt;
+    }
+    
+    .task-table th,
+    .task-table td {
+        padding: 0.5rem 0.25rem;
+    }
+}
+
+/* ====== ACCESSIBILITY FOR PRINT ====== */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ====== HIGH CONTRAST MODE ====== */
+@media print and (prefers-contrast: high) {
+    .stat-card,
+    .goal-card,
+    .task-table th,
+    .task-table td {
+        border-width: 2px !important;
+        border-color: var(--print-black) !important;
+    }
+    
+    .header-divider {
+        background: var(--print-black) !important;
+        height: 3px !important;
+    }
+    
+    .section-title {
+        border-bottom-width: 2px !important;
+        border-bottom-color: var(--print-black) !important;
+    }
+}
+
+/* ====== FONT LOADING FALLBACKS ====== */
+@font-face {
+    font-family: 'Cairo-fallback';
+    src: local('Tahoma'), local('Arial Unicode MS'), local('Arial');
+    font-display: swap;
+}
+
+body {
+    font-family: 'Cairo', 'Cairo-fallback', 'Tahoma', 'Arial Unicode MS', sans-serif;
+}
+
+/* ====== PRINT QUALITY ENHANCEMENTS ====== */
+.task-table,
+.goal-card,
+.stat-card {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+/* Ensure text remains crisp */
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ====== CUSTOM PAGE MARGINS FOR DIFFERENT PRINTERS ====== */
+@page :first {
+    margin-top: 2.5cm;
+}
+
+@page :left {
+    margin-right: 2cm;
+    margin-left: 1cm;
+}
+
+@page :right {
+    margin-right: 1cm;
+    margin-left: 2cm;
+}
+
+/* ====== TABLE ENHANCEMENTS FOR BETTER PRINTING ====== */
+.task-table thead {
+    display: table-header-group;
+}
+
+.task-table tbody {
+    display: table-row-group;
+}
+
+.task-table tfoot {
+    display: table-footer-group;
+}
+
+/* Avoid breaking table rows across pages */
+.task-table tr {
+    page-break-inside: avoid;
+}
+
+/* Keep table headers with content */
+.task-table thead tr {
+    page-break-after: avoid;
+}
+
+/* ====== WATERMARK STYLES (OPTIONAL) ====== */
+.print-container::before {
+    content: '';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    font-size: 72pt;
+    color: rgba(0, 122, 255, 0.05);
+    font-weight: 700;
+    z-index: -1;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* ====== BARCODE/QR CODE AREA (FOR FUTURE USE) ====== */
+.document-id {
+    position: absolute;
+    bottom: 1cm;
+    left: 1cm;
+    font-size: 8pt;
+    color: var(--print-gray-dark);
+}
+
+/* ====== SPECIAL PRINT ELEMENTS ====== */
+.page-number::after {
+    content: counter(page);
+}
+
+.total-pages::after {
+    content: counter(pages);
+}
+
+/* ====== ERROR HANDLING FOR MISSING FONTS ====== */
+@supports not (font-family: 'Cairo') {
+    body {
+        font-family: 'Tahoma', 'Arial Unicode MS', sans-serif !important;
+    }
+}
+
+/* ====== PRINT MEDIA QUERIES FOR DIFFERENT PAPER SIZES ====== */
+@media print and (width: 8.5in) and (height: 11in) {
+    /* US Letter size adjustments */
+    @page {
+        margin: 1in 0.75in;
+    }
+}
+
+@media print and (width: 8.27in) and (height: 11.69in) {
+    /* A4 size (default) */
+    @page {
+        margin: 2cm 1.5cm;
+    }
+}
+
+/* ====== PRINT OPTIMIZATION ====== */
+@media print {
+    /* Optimize for black and white printing */
+    .color-optimized {
+        background: white !important;
+        border: 1px solid #000 !important;
+        color: #000 !important;
+    }
+    
+    /* Ensure proper spacing */
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+    }
+    
+    /* Avoid widows and orphans */
+    p {
+        orphans: 3;
+        widows: 3;
+    }
+    
+    /* Ensure lists stay together */
+    ul, ol {
+        page-break-inside: avoid;
+    }
+}
+
+/* ====== FINAL PRINT SAFETY CHECKS ====== */
+@media print {
+    /* Remove any remaining interactive elements */
+    a[href]::after {
+        content: none !important;
+    }
+    
+    /* Ensure all backgrounds print */
+    * {
+        background-color: transparent !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+    
+    /* Restore essential backgrounds */
+    .stat-icon,
+    .status-badge,
+    .goal-count {
+        background-color: var(--print-primary) !important;
+    }
+    
+    .employee-section,
+    .goals-section,
+    .overdue-section {
+        background-color: #f8f9fa !important;
+    }
+    
+    .goal-text {
+        background-color: #f5f5f5 !important;
+    }
+}

@@ -1,0 +1,416 @@
+<div class="modal-header">
+    <h5 class="modal-title">
+        <i class="bx bx-building me-2"></i>
+        {% if form_action == 'edit' %}تعديل المشروع{% else %}إضافة مشروع جديد{% endif %}
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<form id="projectForm" method="POST" 
+      action="{% if form_action == 'edit' %}{% url 'tasks:edit_project' project.pk %}{% else %}{% url 'tasks:create_project' %}{% endif %}">
+    {% csrf_token %}
+    
+    <div class="modal-body">
+        <!-- Alert container for form errors -->
+        <div class="alert alert-danger d-none" id="formErrorAlert">
+            <ul class="mb-0" id="formErrorList"></ul>
+        </div>
+        
+        <!-- Basic Information Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="text-primary mb-3">
+                    <i class="bx bx-info-circle me-1"></i>
+                    المعلومات الأساسية
+                </h6>
+            </div>
+            
+            <div class="col-12 mb-3">
+                <label class="form-label required">اسم المشروع</label>
+                <input type="text" class="form-control" name="name" 
+                       value="{% if project %}{{ project.name }}{% endif %}" 
+                       placeholder="أدخل اسم المشروع" required>
+                <div class="form-text">اسم فريد ومميز للمشروع</div>
+            </div>
+            
+            <div class="col-12 mb-3">
+                <label class="form-label">وصف المشروع</label>
+                <textarea class="form-control" name="description" rows="4" 
+                          placeholder="أدخل وصفاً تفصيلياً للمشروع">{% if project %}{{ project.description }}{% endif %}</textarea>
+                <div class="form-text">وصف مفصل لأهداف ومتطلبات المشروع</div>
+            </div>
+        </div>
+        
+        <!-- Assignment and Timeline Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="text-primary mb-3">
+                    <i class="bx bx-users me-1"></i>
+                    فريق العمل والجدولة
+                </h6>
+            </div>
+            
+            <!-- Multiple Employees Assignment -->
+            <div class="col-12 mb-3">
+                <label class="form-label">الموظفين المُعيّنين</label>
+                <div class="employees-selection">
+                    <div class="form-check-group" id="employeesCheckboxes">
+                        {% for employee in employees %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="assigned_employees" 
+                                   value="{{ employee.pk }}" id="emp_{{ employee.pk }}"
+                                   {% if project and employee in project.assigned_employees.all %}checked{% endif %}>
+                            <label class="form-check-label d-flex align-items-center" for="emp_{{ employee.pk }}">
+                                <div class="avatar avatar-sm me-2">
+                                    {% if employee.profile_picture %}
+                                    <img src="{{ employee.profile_picture.url }}" alt="{{ employee.name }}" class="rounded-circle">
+                                    {% else %}
+                                    <span class="avatar-initial rounded-circle bg-label-primary">
+                                        {{ employee.name|first|upper }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="fw-semibold">{{ employee.name }}</div>
+                                    <small class="text-muted">{{ employee.job_title }} - {{ employee.get_section_display_arabic }}</small>
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="form-text">اختر الموظفين المسؤولين عن تنفيذ المشروع</div>
+                </div>
+                
+                <!-- Search and filter for employees -->
+                <div class="mt-2">
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="employeeSearch" placeholder="ابحث عن موظف...">
+                        <button type="button" class="btn btn-outline-secondary" id="selectAllEmployees">
+                            تحديد الكل
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="clearAllEmployees">
+                            إلغاء التحديد
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Selected employees summary -->
+                <div class="mt-2" id="selectedEmployeesSummary" style="display: none;">
+                    <small class="text-muted">الموظفين المحددين: <span id="selectedCount">0</span></small>
+                    <div id="selectedEmployeesList" class="mt-1"></div>
+                </div>
+            </div>
+            
+            <!-- Primary Employee (optional) -->
+            <div class="col-md-6 mb-3">
+                <label class="form-label">الموظف الرئيسي</label>
+                <select class="form-select" name="primary_assigned_employee" id="primaryEmployeeSelect">
+                    <option value="">اختر الموظف الرئيسي (اختياري)</option>
+                    {% for employee in employees %}
+                    <option value="{{ employee.pk }}" 
+                            {% if project and project.primary_assigned_employee_id == employee.pk %}selected{% endif %}>
+                        {{ employee.name }} - {{ employee.job_title }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">الموظف الرئيسي المسؤول عن قيادة المشروع</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label">تاريخ الانتهاء</label>
+                <input type="date" class="form-control" name="due_date" 
+                       value="{% if project and project.due_date %}{{ project.due_date|date:'Y-m-d' }}{% endif %}"
+                       min="{{ today|date:'Y-m-d' }}">
+                <div class="form-text">التاريخ المتوقع لإنجاز المشروع</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label">حالة المشروع</label>
+                <select class="form-select" name="status">
+                    {% for value, label in status_choices %}
+                    <option value="{{ value }}" 
+                            {% if project and project.status == value %}selected{% elif not project and value == 'new' %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">الحالة الحالية للمشروع</div>
+            </div>
+        </div>
+        
+        <!-- Project Preview Section (for edit mode) -->
+        {% if form_action == 'edit' and project %}
+        <div class="row">
+            <div class="col-12">
+                <h6 class="text-primary mb-3">
+                    <i class="bx bx-chart me-1"></i>
+                    معلومات إضافية
+                </h6>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label text-muted">منشئ المشروع</label>
+                <div class="form-control-plaintext">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-sm me-2">
+                            {% if project.created_by.profile_picture %}
+                            <img src="{{ project.created_by.profile_picture.url }}" alt="{{ project.created_by.name }}" class="rounded-circle">
+                            {% else %}
+                            <span class="avatar-initial rounded-circle bg-label-info">
+                                {{ project.created_by.name|first|upper }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="fw-semibold">{{ project.created_by.name }}</div>
+                            <small class="text-muted">{{ project.created_by.job_title }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label text-muted">تاريخ الإنشاء</label>
+                <div class="form-control-plaintext">
+                    <i class="bx bx-calendar me-1"></i>
+                    {{ project.created_at|date:"d/m/Y H:i" }}
+                </div>
+            </div>
+            
+            {% if project.is_overdue %}
+            <div class="col-12 mb-3">
+                <div class="alert alert-warning">
+                    <i class="bx bx-error-circle me-2"></i>
+                    <strong>تنبيه:</strong> هذا المشروع متأخر عن الموعد المحدد بـ {{ project.days_remaining|add:"-1" }} يوم.
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            إلغاء
+        </button>
+        <button type="submit" class="btn btn-primary" id="saveProjectBtn">
+            <span class="btn-text">
+                {% if form_action == 'edit' %}
+                <i class="bx bx-save me-1"></i>حفظ التغييرات
+                {% else %}
+                <i class="bx bx-plus me-1"></i>إنشاء المشروع
+                {% endif %}
+            </span>
+            <span class="spinner-border spinner-border-sm d-none" role="status">
+                <span class="visually-hidden">جاري الحفظ...</span>
+            </span>
+        </button>
+    </div>
+</form>
+
+<style>
+.employees-selection {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--gray-300);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.form-check {
+    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.form-check:hover {
+    background-color: var(--gray-50);
+}
+
+.form-check-input:checked + .form-check-label {
+    color: var(--primary-color);
+}
+
+.selected-employee-tag {
+    display: inline-block;
+    background: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin: 0.125rem;
+}
+</style>
+
+<script>
+$(document).ready(function() {
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    $('input[name="due_date"]').attr('min', today);
+    
+    // Employee selection functionality
+    function updateSelectedEmployeesSummary() {
+        const selectedCheckboxes = $('input[name="assigned_employees"]:checked');
+        const count = selectedCheckboxes.length;
+        const summaryDiv = $('#selectedEmployeesSummary');
+        const countSpan = $('#selectedCount');
+        const listDiv = $('#selectedEmployeesList');
+        
+        countSpan.text(count);
+        
+        if (count > 0) {
+            summaryDiv.show();
+            
+            // Create tags for selected employees
+            let tagsHtml = '';
+            selectedCheckboxes.each(function() {
+                const label = $(this).next('label').find('.fw-semibold').text();
+                tagsHtml += `<span class="selected-employee-tag">${label}</span>`;
+            });
+            listDiv.html(tagsHtml);
+            
+            // Update primary employee dropdown
+            updatePrimaryEmployeeOptions();
+        } else {
+            summaryDiv.hide();
+            listDiv.html('');
+            
+            // Clear primary employee dropdown
+            $('#primaryEmployeeSelect').val('');
+        }
+    }
+    
+    function updatePrimaryEmployeeOptions() {
+        const selectedEmployees = $('input[name="assigned_employees"]:checked');
+        const primarySelect = $('#primaryEmployeeSelect');
+        const currentValue = primarySelect.val();
+        
+        // Clear and rebuild options
+        primarySelect.find('option[value!=""]').remove();
+        
+        selectedEmployees.each(function() {
+            const employeeId = $(this).val();
+            const employeeName = $(this).next('label').find('.fw-semibold').text();
+            const jobTitle = $(this).next('label').find('.text-muted').text().split(' - ')[0];
+            
+            const option = $('<option></option>')
+                .attr('value', employeeId)
+                .text(`${employeeName} - ${jobTitle}`);
+            
+            primarySelect.append(option);
+        });
+        
+        // Restore selection if still valid
+        if (currentValue && selectedEmployees.filter(`[value="${currentValue}"]`).length > 0) {
+            primarySelect.val(currentValue);
+        }
+    }
+    
+    // Handle employee checkbox changes
+    $('input[name="assigned_employees"]').on('change', updateSelectedEmployeesSummary);
+    
+    // Search functionality
+    $('#employeeSearch').on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        $('.form-check').each(function() {
+            const employeeName = $(this).find('.fw-semibold').text().toLowerCase();
+            const jobTitle = $(this).find('.text-muted').text().toLowerCase();
+            
+            if (employeeName.includes(searchTerm) || jobTitle.includes(searchTerm)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    });
+    
+    // Select all employees
+    $('#selectAllEmployees').on('click', function() {
+        $('input[name="assigned_employees"]:visible').prop('checked', true);
+        updateSelectedEmployeesSummary();
+    });
+    
+    // Clear all employees
+    $('#clearAllEmployees').on('click', function() {
+        $('input[name="assigned_employees"]').prop('checked', false);
+        updateSelectedEmployeesSummary();
+    });
+    
+    // Dynamic status change handling
+    $('select[name="status"]').on('change', function() {
+        const status = $(this).val();
+        const dueDateField = $('input[name="due_date"]');
+        
+        if (status === 'finished') {
+            dueDateField.closest('.mb-3').find('.form-text').text('تاريخ الانتهاء الفعلي (اختياري)');
+        } else {
+            dueDateField.closest('.mb-3').find('.form-text').text('التاريخ المتوقع لإنجاز المشروع');
+        }
+    });
+    
+    // Form validation enhancements
+    $('#projectForm').on('submit', function(e) {
+        const projectName = $('input[name="name"]').val().trim();
+        const dueDate = $('input[name="due_date"]').val();
+        const status = $('select[name="status"]').val();
+        const selectedEmployees = $('input[name="assigned_employees"]:checked').length;
+        
+        if (status !== 'finished' && dueDate) {
+            const dueDateObj = new Date(dueDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (dueDateObj < today) {
+                e.preventDefault();
+                alert('تاريخ الانتهاء يجب أن يكون في المستقبل');
+                $('input[name="due_date"]').focus();
+                return false;
+            }
+        }
+        
+        if (projectName.length < 3) {
+            e.preventDefault();
+            alert('اسم المشروع يجب أن يكون 3 أحرف على الأقل');
+            $('input[name="name"]').focus();
+            return false;
+        }
+        
+        if (selectedEmployees === 0) {
+            const confirm = window.confirm('لم تحدد أي موظفين للمشروع. هل تريد المتابعة؟');
+            if (!confirm) {
+                e.preventDefault();
+                return false;
+            }
+        }
+    });
+    
+    // Real-time character counter for description
+    $('textarea[name="description"]').on('input', function() {
+        const maxLength = 1000;
+        const currentLength = $(this).val().length;
+        const remaining = maxLength - currentLength;
+        
+        let helpText = $(this).closest('.mb-3').find('.form-text');
+        if (currentLength > 0) {
+            helpText.text(`${remaining} حرف متبقي من ${maxLength}`);
+            if (remaining < 50) {
+                helpText.addClass('text-warning');
+            } else {
+                helpText.removeClass('text-warning');
+            }
+        } else {
+            helpText.text('وصف مفصل لأهداف ومتطلبات المشروع');
+            helpText.removeClass('text-warning');
+        }
+    });
+    
+    // Initialize summary on page load
+    updateSelectedEmployeesSummary();
+    
+    // Focus on first input
+    setTimeout(() => {
+        $('input[name="name"]').focus();
+    }, 100);
+});
+</script>

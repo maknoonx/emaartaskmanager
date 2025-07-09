@@ -1,0 +1,432 @@
+/* Dashboard Specific Styles */
+
+/* ===== CARD ANIMATIONS ===== */
+.dashboard-card {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== NOTIFICATION STYLES ===== */
+.notification-item {
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-left: 4px solid;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.notification-item.new-task {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f0f7ff 100%);
+    border-left-color: #2196F3;
+}
+
+.notification-item.completed-task {
+    background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+    border-left-color: #4CAF50;
+}
+
+.notification-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.notification-badge {
+    position: relative;
+}
+
+.notification-badge::after {
+    content: attr(data-count);
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #f44336;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    animation: pulse 2s infinite;
+}
+
+/* ===== TASK CARD STYLES ===== */
+.task-card {
+    border-radius: 12px;
+    border: 1px solid #e3e6f0;
+    padding: 20px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    background: white;
+}
+
+.task-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--priority-color, #ddd);
+}
+
+.task-card.priority-high::before {
+    background: linear-gradient(180deg, #FF5722 0%, #FF8A65 100%);
+}
+
+.task-card.priority-medium::before {
+    background: linear-gradient(180deg, #FF9800 0%, #FFB74D 100%);
+}
+
+.task-card.priority-low::before {
+    background: linear-gradient(180deg, #4CAF50 0%, #81C784 100%);
+}
+
+.task-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.12);
+}
+
+/* ===== STATISTICS CARDS ===== */
+.stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 20px;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.stats-card h3 {
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.stats-card p {
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+/* ===== QUICK ACTIONS ===== */
+.quick-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.quick-action-btn {
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: none;
+    font-size: 11px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.quick-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+}
+
+.btn-complete {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    color: white;
+}
+
+.btn-complete:hover {
+    color: white;
+}
+
+.btn-edit {
+    background: linear-gradient(45deg, #FF9800, #f57c00);
+    color: white;
+}
+
+.btn-edit:hover {
+    color: white;
+}
+
+.btn-detail {
+    background: linear-gradient(45deg, #2196F3, #1976d2);
+    color: white;
+}
+
+.btn-detail:hover {
+    color: white;
+}
+
+/* ===== DUE DATE BADGES ===== */
+.due-date-badge {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.due-today {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+}
+
+.due-soon {
+    background: #fff3e0;
+    color: #ef6c00;
+    border: 1px solid #ffcc02;
+}
+
+.due-normal {
+    background: #e8f5e8;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+.overdue {
+    background: #ffebee;
+    color: #d32f2f;
+    border: 1px solid #ffcdd2;
+    animation: pulse 2s infinite;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* ===== EMPTY STATES ===== */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.empty-state h6 {
+    color: #495057;
+    margin-bottom: 10px;
+}
+
+/* ===== SECTION HEADERS ===== */
+.section-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: 4px solid #6c757d;
+}
+
+/* ===== AVATAR ENHANCEMENTS ===== */
+.avatar-xl {
+    width: 80px;
+    height: 80px;
+}
+
+.avatar-xl .avatar-initial {
+    width: 80px;
+    height: 80px;
+    line-height: 80px;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+    .dashboard-card {
+        margin-bottom: 20px;
+    }
+    
+    .quick-actions {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .quick-action-btn {
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .task-card {
+        padding: 15px;
+    }
+    
+    .stats-card {
+        padding: 20px;
+        margin-bottom: 15px;
+    }
+    
+    .notification-item {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 576px) {
+    .dashboard-card .card-body {
+        padding: 15px;
+    }
+    
+    .task-card {
+        padding: 12px;
+    }
+    
+    .stats-card {
+        padding: 15px;
+    }
+    
+    .stats-card h3 {
+        font-size: 1.5rem;
+    }
+}
+
+/* ===== SCROLLBAR STYLING ===== */
+.card-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.card-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.card-body::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.card-body::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* ===== LOADING STATES ===== */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 15px;
+    z-index: 10;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ===== TOAST NOTIFICATIONS ===== */
+.toast-container {
+    z-index: 9999;
+}
+
+.toast {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.toast-header {
+    border-bottom: none;
+    border-radius: 12px 12px 0 0;
+}
+
+.toast-body {
+    border-radius: 0 0 12px 12px;
+}
+
+/* ===== UTILITY CLASSES ===== */
+.text-gradient {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.shadow-soft {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+.border-gradient {
+    border: 2px solid;
+    border-image: linear-gradient(45deg, #667eea, #764ba2) 1;
+}
+
+/* ===== RTL SUPPORT ===== */
+[dir="rtl"] .task-card::before {
+    left: auto;
+    right: 0;
+}
+
+[dir="rtl"] .notification-item {
+    border-left: none;
+    border-right: 4px solid;
+}
+
+[dir="rtl"] .notification-item:hover {
+    transform: translateX(-5px);
+}
+
+[dir="rtl"] .section-header {
+    border-left: none;
+    border-right: 4px solid #6c757d;
+}

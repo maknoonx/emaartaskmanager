@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="ar" dir="rtl" class="layout-menu-fixed layout-compact" data-assets-path="{% load static %}{% get_static_prefix %}" data-template="vertical-menu-template">
+<head>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    
+    <title>{% block title %}جمعية إعمار - لوحة التحكم{% endblock %}</title>
+    <meta name="description" content="نظام إدارة جمعية إعمار" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}" />
+    
+    <!-- Arabic Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/boxicons/2.1.4/css/boxicons.min.css" />
+    
+    <!-- Bootstrap CSS (for tooltip and modal support) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
+    
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Layout wrapper -->
+    <div class="layout-wrapper layout-content-navbar">
+        <div class="layout-container">
+            
+            <!-- Mobile Navigation Bar - Shows only on mobile -->
+            <nav class="navbar-mobile d-lg-none">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between w-100">
+                        <!-- Mobile Hamburger Menu Button -->
+                        <button class="navbar-toggler mobile-menu-btn layout-menu-toggle" type="button" aria-label="فتح القائمة">
+                            <i class="bx bx-menu"></i>
+                        </button>
+                        
+                        <!-- Mobile Logo -->
+                        <div class="navbar-brand-mobile">
+                            <img src="{% static 'img/logo.png' %}" alt="جمعية إعمار" class="logo-mobile">
+                            <span class="brand-text-mobile">جمعية إعمار</span>
+                        </div>
+                        
+                        <!-- Mobile User Actions - FIXED: Removed Settings -->
+                        <div class="navbar-actions-mobile">
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bx bx-user"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{% url 'employees:logout' %}"><i class="bx bx-power-off me-2"></i>تسجيل الخروج</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            
+            <!-- Desktop/Mobile Sidebar Menu -->
+            <aside id="layout-menu" class="layout-menu menu-vertical menu">
+                <!-- Logo and Toggle -->
+                <div class="app-brand demo">
+                    <a href="{% url 'dashboard:dashboard' %}" class="app-brand-link">
+                        <span class="app-brand-logo demo">
+                            <img src="{% static 'img/logo.png' %}" alt="جمعية إعمار" class="logo-img">
+                        </span>
+                        <span class="app-brand-text demo menu-text fw-bold">جمعية إعمار</span>
+                    </a>
+                    <!-- Desktop Toggle Button (Hidden on mobile) -->
+                    <button type="button" class="menu-toggle-btn d-none d-lg-flex" id="menuToggle" aria-label="طي/توسيع القائمة">
+                        <i class="bx bx-chevron-right"></i>
+                    </button>
+                </div>
+
+                <div class="menu-inner-shadow"></div>
+
+                <!-- Navigation Menu -->
+                <ul class="menu-inner py-1">
+                    
+                    <!-- Section 1: الرئيسية، مهامي، أهداف الشهر، تقارير -->
+                    <li class="menu-item {% if current_page == 'dashboard' %}active{% endif %}">
+                        <a href="{% url 'dashboard:dashboard' %}" class="menu-link" title="الرئيسية">
+                            <i class="menu-icon tf-icons bx bx-home-smile"></i>
+                            <div class="menu-text">الرئيسية</div>
+                        </a>
+                    </li>
+                    
+                    <li class="menu-item {% if current_page == 'my_tasks' %}active{% endif %}">
+                        <a href="{% url 'tasks:my_tasks' %}" class="menu-link" title="مهامي">
+                            <i class="menu-icon tf-icons bx bx-task"></i>
+                            <div class="menu-text">مهامي</div>
+                        </a>
+                    </li>
+
+                    <!-- NEW: Employee Tasks Section - Only for users with employee view permissions -->
+                    {% if perms.employees.view_employee or user.is_superuser %}
+                    <li class="menu-item {% if current_page == 'employee_tasks' %}active{% endif %}">
+                        <a href="{% url 'tasks:employee_tasks_list' %}" class="menu-link" title="مهام الموظفين">
+                            <i class="menu-icon tf-icons bx bx-users"></i>
+                            <div class="menu-text">مهام الموظفين</div>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="menu-item {% if current_page == 'monthly_goals' %}active{% endif %}">
+                        <a href="{% url 'tasks:monthly_goals' %}" class="menu-link" title="أهداف الشهر">
+                            <i class="menu-icon tf-icons bx bx-target-lock"></i>
+                            <div class="menu-text">أهداف الشهر</div>
+                        </a>
+                    </li>
+                        
+                    <li class="menu-item {% if current_page == 'reports' %}active{% endif %}">
+                        <a href="{% url 'reports:monthly' %}" class="menu-link" title="التقارير الشهرية">
+                            <i class="menu-icon tf-icons bx bx-chart"></i>
+                            <div class="menu-text">التقارير الشهرية</div>
+                        </a>
+                    </li>
+
+                    <!-- Menu Divider -->
+                    <li class="menu-header small text-uppercase">
+                        <span class="menu-header-text">المشاريع والبرامج</span>
+                    </li>
+
+                    <!-- Section 2: المشاريع، البرامج -->
+                    <li class="menu-item {% if current_page == 'projects' %}active{% endif %}">
+                        <a href="{% url 'tasks:projects' %}" class="menu-link" title="المشاريع">
+                            <i class="menu-icon tf-icons bx bx-building"></i>
+                            <div class="menu-text">المشاريع</div>
+                        </a>
+                    </li>
+                    
+                    <li class="menu-item {% if current_page == 'programs' %}active{% endif %}">
+                        <a href="{% url 'programs:index' %}" class="menu-link" title="البرامج">
+                            <i class="menu-icon tf-icons bx bx-folder"></i>
+                            <div class="menu-text">البرامج</div>
+                        </a>
+                    </li>
+
+                    <!-- Menu Divider - Only show if user has employee permissions -->
+                    {% if perms.employees.view_employee or user.is_superuser %}
+                    <li class="menu-header small text-uppercase">
+                        <span class="menu-header-text">الإدارة</span>
+                    </li>
+
+                    <!-- Section 3: الموظفين - Only for users with employee permissions -->
+                    <li class="menu-item {% if current_page == 'employees' %}active{% endif %}">
+                        <a href="{% url 'employees:index' %}" class="menu-link" title="الموظفين">
+                            <i class="menu-icon tf-icons bx bx-group"></i>
+                            <div class="menu-text">الموظفين</div>
+                        </a>
+                    </li>
+                    {% endif %}
+
+
+                    <!-- Menu Divider -->
+                    <li class="menu-header small text-uppercase">
+                        <span class="menu-header-text">الحساب</span>
+                    </li>
+
+
+
+                    <li class="menu-item">
+                        <a href="{% url 'employees:logout' %}" class="menu-link" title="تسجيل الخروج">
+                            <i class="menu-icon tf-icons bx bx-power-off"></i>
+                            <div class="menu-text">تسجيل الخروج</div>
+                        </a>
+                    </li>
+
+                </ul>
+            </aside>
+            <!-- / Menu -->
+
+            <!-- Layout page -->
+            <div class="layout-page">
+                <!-- Content wrapper -->
+                <div class="content-wrapper">
+                    
+                    <!-- Content -->
+                    <div class="container-xxl flex-grow-1 container-p-y">
+                        
+
+
+                        <!-- Page Content -->
+                        {% block content %}
+                        {% endblock %}
+                        
+                    </div>
+                    <!-- / Content -->
+
+                    <!-- Footer -->
+                    <footer class="content-footer footer bg-footer-theme">
+                        <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+                            <div class="mb-2 mb-md-0">
+                                © 2025 جمعية إعمار
+                                <a href="#" class="footer-link fw-medium">جميع الحقوق محفوظة.</a>
+                            </div>
+                            <div class="d-none d-lg-inline-block">
+                                <a href="#" class="footer-link me-4">الدعم</a>
+                                <a href="#" class="footer-link me-4">الشروط والأحكام</a>
+                                <a href="#" class="footer-link">سياسة الخصوصية</a>
+                            </div>
+                        </div>
+                    </footer>
+                    <!-- / Footer -->
+                </div>
+                <!-- / Content wrapper -->
+            </div>
+            <!-- / Layout page -->
+        </div>
+
+        <!-- Overlay for mobile menu -->
+        <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+    <!-- / Layout wrapper -->
+
+    <!-- Core JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    
+    <!-- Bootstrap JS (for tooltips, modals, and other components) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Menu Toggle JavaScript -->
+    <script>
+    $(document).ready(function() {
+        // Desktop menu toggle
+        $('#menuToggle').on('click', function() {
+            $('#layout-menu').toggleClass('collapsed');
+            
+            // Update toggle icon
+            const icon = $(this).find('i');
+            if ($('#layout-menu').hasClass('collapsed')) {
+                icon.removeClass('bx-chevron-right').addClass('bx-chevron-left');
+            } else {
+                icon.removeClass('bx-chevron-left').addClass('bx-chevron-right');
+            }
+        });
+        
+        // Mobile menu toggle
+        $('.layout-menu-toggle').on('click', function() {
+            $('body').toggleClass('layout-menu-expanded');
+        });
+        
+        // Close mobile menu when clicking overlay
+        $('.layout-overlay').on('click', function() {
+            $('body').removeClass('layout-menu-expanded');
+        });
+        
+        // Close mobile menu when clicking on menu item (optional)
+        $('.layout-menu .menu-link').on('click', function() {
+            if ($(window).width() < 992) {
+                $('body').removeClass('layout-menu-expanded');
+            }
+        });
+        
+        // Handle window resize
+        $(window).on('resize', function() {
+            if ($(window).width() >= 992) {
+                $('body').removeClass('layout-menu-expanded');
+            }
+        });
+    });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

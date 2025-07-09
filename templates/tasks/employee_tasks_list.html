@@ -1,0 +1,221 @@
+<!-- tasks/templates/tasks/employee_tasks_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - جمعية إعمار{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/employee_tasks.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h4 class="fw-bold mb-2">
+                        <i class="bx bx-group me-2"></i>
+                        {{ title }}
+                    </h4>
+                    <p class="text-muted mb-0">عرض مهام جميع الموظفين - للمراجعة فقط</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-label-primary">{{ total_employees }} موظف نشط</span>
+                    <span class="badge bg-label-success">{{ employees_with_tasks }} لديهم مهام</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">البحث</label>
+                            <input type="text" class="form-control" name="search" value="{{ search_query }}" 
+                                   placeholder="البحث بالاسم، المسمى الوظيفي، أو الرقم الوظيفي">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">القسم</label>
+                            <select class="form-select" name="section">
+                                <option value="">جميع الأقسام</option>
+                                {% for key, value in section_choices %}
+                                <option value="{{ key }}" {% if section_filter == key %}selected{% endif %}>{{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="bx bx-search me-1"></i>
+                                بحث
+                            </button>
+                            <a href="{% url 'tasks:employee_tasks_list' %}" class="btn btn-outline-secondary">
+                                <i class="bx bx-refresh me-1"></i>
+                                إعادة تعيين
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee Cards -->
+    <div class="row">
+        {% if page_obj %}
+            {% for employee in page_obj %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card employee-card h-100" onclick="window.location.href='{% url 'tasks:employee_task_detail' employee.id %}'">
+                    <div class="card-body">
+                        <!-- Employee Info -->
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="avatar avatar-lg me-3">
+                                <span class="avatar-initial rounded-circle bg-label-primary">
+                                    {{ employee.name|first }}
+                                </span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ employee.name }}</h6>
+                                <small class="text-muted">{{ employee.job_title }}</small>
+                                <div class="small text-muted">{{ employee.job_number }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Section Badge -->
+                        <div class="mb-3">
+                            <span class="badge bg-label-info">{{ employee.get_section_display_arabic }}</span>
+                        </div>
+
+                        <!-- Task Statistics -->
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="border-end">
+                                    <h6 class="mb-0 text-primary">{{ employee.total_tasks }}</h6>
+                                    <small class="text-muted">إجمالي المهام</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border-end">
+                                    <h6 class="mb-0 text-success">{{ employee.finished_tasks }}</h6>
+                                    <small class="text-muted">مكتملة</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <h6 class="mb-0 text-warning">{{ employee.pending_tasks }}</h6>
+                                <small class="text-muted">قيد التنفيذ</small>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        {% if employee.total_tasks > 0 %}
+                        <div class="mt-3">
+                            {% widthratio employee.finished_tasks employee.total_tasks 100 as completion_percentage %}
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted">نسبة الإنجاز</small>
+                                <small class="text-muted">{{ completion_percentage }}%</small>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {{ completion_percentage }}%" 
+                                     aria-valuenow="{{ completion_percentage }}" 
+                                     aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Click Indicator -->
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="bx bx-time me-1"></i>
+                                انقر للعرض التفصيلي
+                            </small>
+                            <i class="bx bx-chevron-left text-muted"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <div class="avatar avatar-xl mx-auto mb-3">
+                            <span class="avatar-initial rounded bg-label-secondary">
+                                <i class="bx bx-group bx-lg"></i>
+                            </span>
+                        </div>
+                        <h6 class="mb-2">لا توجد موظفين</h6>
+                        <p class="text-muted mb-0">لا توجد موظفين نشطين حالياً أو لم تطابق معايير البحث</p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav aria-label="pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if section_filter %}&section={{ section_filter }}{% endif %}">السابق</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if section_filter %}&section={{ section_filter }}{% endif %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if section_filter %}&section={{ section_filter }}{% endif %}">التالي</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Add hover effects to employee cards
+    $('.employee-card').hover(
+        function() {
+            $(this).addClass('shadow-lg').css('transform', 'translateY(-5px)');
+        },
+        function() {
+            $(this).removeClass('shadow-lg').css('transform', 'translateY(0)');
+        }
+    );
+    
+    // Add click animation
+    $('.employee-card').on('click', function() {
+        $(this).css('transform', 'scale(0.98)');
+        setTimeout(() => {
+            window.location.href = $(this).attr('onclick').match(/'([^']+)'/)[1];
+        }, 100);
+    });
+});
+</script>
+{% endblock %}

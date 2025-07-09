@@ -1,0 +1,252 @@
+<div class="modal-header">
+    <h5 class="modal-title">
+        <i class="bx bx-target-lock me-2"></i>
+        {% if form_action == 'edit' %}تعديل الأهداف{% else %}إضافة أهداف جديدة{% endif %}
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<form id="goalForm" method="POST" 
+      action="{% if form_action == 'edit' %}{% url 'tasks:monthly_goals_edit' monthly_goal.pk %}{% else %}{% url 'tasks:monthly_goals_create' %}{% endif %}">
+    {% csrf_token %}
+    
+    <div class="modal-body">
+        <!-- Alert container for form errors -->
+        <div class="alert alert-danger d-none" id="formErrorAlert">
+            <ul class="mb-0" id="formErrorList"></ul>
+        </div>
+        
+        <!-- Time Period Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="text-primary mb-3">
+                    <i class="bx bx-calendar me-1"></i>
+                    الفترة الزمنية
+                </h6>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label required">الشهر</label>
+                <select class="form-select" name="month" required>
+                    <option value="">اختر الشهر</option>
+                    {% for month_num, month_name in month_choices %}
+                    <option value="{{ month_num }}" 
+                            {% if monthly_goal and monthly_goal.month == month_num %}selected
+                            {% elif not monthly_goal and month_num == current_month %}selected{% endif %}>
+                        {{ month_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">الشهر المراد وضع أهداف له</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label required">السنة</label>
+                <select class="form-select" name="year" required>
+                    {% for year in year_range %}
+                    <option value="{{ year }}" 
+                            {% if monthly_goal and monthly_goal.year == year %}selected
+                            {% elif not monthly_goal and year == current_year %}selected{% endif %}>
+                        {{ year }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">السنة المراد وضع أهداف لها</div>
+            </div>
+        </div>
+        
+        <!-- Goals Section -->
+        <div class="row">
+            <div class="col-12">
+                <h6 class="text-primary mb-3">
+                    <i class="bx bx-target-lock me-1"></i>
+                    الأهداف
+                </h6>
+            </div>
+            
+            <div class="col-12 mb-3">
+                <label class="form-label required">أهداف الشهر</label>
+                <textarea class="form-control goals-textarea" name="goals" rows="8" 
+                          placeholder="اكتب أهدافك لهذا الشهر...&#10;&#10;مثال:&#10;• إنجاز مشروع تطوير الموقع الإلكتروني&#10;• حضور 3 دورات تدريبية في مجال التقنية&#10;• تحسين مهارات التواصل مع الفريق&#10;• قراءة كتابين في مجال التطوير الشخصي"
+                          required>{% if monthly_goal %}{{ monthly_goal.goals }}{% endif %}</textarea>
+                <div class="form-text" id="goalsCounter">
+                    اكتب أهدافك بوضوح ودقة. يمكنك استخدام النقاط أو الأرقام لتنظيم الأهداف
+                </div>
+            </div>
+        </div>
+        
+        <!-- Additional Information Section (for edit mode) -->
+        {% if form_action == 'edit' and monthly_goal %}
+        <div class="row">
+            <div class="col-12">
+                <h6 class="text-primary mb-3">
+                    <i class="bx bx-info-circle me-1"></i>
+                    معلومات إضافية
+                </h6>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label text-muted">تاريخ الإنشاء</label>
+                <div class="form-control-plaintext">
+                    <i class="bx bx-calendar me-1"></i>
+                    {{ monthly_goal.created_at|date:"d/m/Y H:i" }}
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label text-muted">آخر تحديث</label>
+                <div class="form-control-plaintext">
+                    <i class="bx bx-clock me-1"></i>
+                    {{ monthly_goal.updated_at|date:"d/m/Y H:i" }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            إلغاء
+        </button>
+        <button type="submit" class="btn btn-primary" id="saveGoalBtn">
+            <span class="btn-text">
+                {% if form_action == 'edit' %}
+                <i class="bx bx-save me-1"></i>حفظ التغييرات
+                {% else %}
+                <i class="bx bx-plus me-1"></i>إضافة الأهداف
+                {% endif %}
+            </span>
+            <span class="spinner-border spinner-border-sm d-none" role="status">
+                <span class="visually-hidden">جاري الحفظ...</span>
+            </span>
+        </button>
+    </div>
+</form>
+
+<script>
+$(document).ready(function() {
+    // Get current values
+    const currentYear = {{ current_year }};
+    const currentMonth = {{ current_month|default:1 }};
+    
+    // Real-time character and goals counter
+    const goalsTextarea = $('textarea[name="goals"]');
+    const goalsCounter = $('#goalsCounter');
+    
+    function updateGoalsCounter() {
+        const text = goalsTextarea.val();
+        const charCount = text.length;
+        const lines = text.split('\n').filter(line => line.trim().length > 0).length;
+        
+        if (charCount > 0) {
+            goalsCounter.html(`
+                <span class="text-info">
+                    <i class="bx bx-text me-1"></i>${charCount} حرف
+                </span>
+                <span class="text-success ms-3">
+                    <i class="bx bx-list-ul me-1"></i>${lines} ${lines === 1 ? 'هدف' : 'أهداف'}
+                </span>
+            `);
+            
+            if (charCount < 10) {
+                goalsCounter.append('<span class="text-warning ms-3">الأهداف قصيرة جداً</span>');
+            }
+        } else {
+            goalsCounter.text('اكتب أهدافك بوضوح ودقة. يمكنك استخدام النقاط أو الأرقام لتنظيم الأهداف');
+        }
+    }
+    
+    goalsTextarea.on('input', updateGoalsCounter);
+    updateGoalsCounter(); // Initial call
+    
+    // Set default month if creating new goal
+    {% if form_action == 'create' %}
+    const monthSelect = $('select[name="month"]');
+    const yearSelect = $('select[name="year"]');
+    if (!monthSelect.val()) {
+        monthSelect.val(currentMonth);
+    }
+    if (!yearSelect.val()) {
+        yearSelect.val(currentYear);
+    }
+    {% endif %}
+    
+    // Month/Year validation
+    $('select[name="month"], select[name="year"]').on('change', function() {
+        const month = parseInt($('select[name="month"]').val());
+        const year = parseInt($('select[name="year"]').val());
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth() + 1;
+        const currentYear = currentDate.getFullYear();
+        
+        if (month && year) {
+            const statusDiv = $('.form-text').eq(1);
+            if (year < currentYear || (year === currentYear && month < currentMonth - 1)) {
+                statusDiv.html('<span class="text-warning">تحذير: هذا تاريخ في الماضي</span>');
+            } else if (year === currentYear && month === currentMonth) {
+                statusDiv.html('<span class="text-success">الشهر الحالي</span>');
+            } else {
+                statusDiv.html('<span class="text-info">شهر في المستقبل</span>');
+            }
+        }
+    });
+    
+    // Form validation enhancements
+    $('#goalForm').on('submit', function(e) {
+        const month = $('select[name="month"]').val();
+        const year = $('select[name="year"]').val();
+        const goals = $('textarea[name="goals"]').val().trim();
+        
+        if (!month || !year) {
+            e.preventDefault();
+            alert('يجب اختيار الشهر والسنة');
+            return false;
+        }
+        
+        if (goals.length < 10) {
+            e.preventDefault();
+            alert('الأهداف قصيرة جداً، يجب أن تكون 10 أحرف على الأقل');
+            goalsTextarea.focus();
+            return false;
+        }
+        
+        if (goals.length > 5000) {
+            e.preventDefault();
+            alert('الأهداف طويلة جداً، يجب أن تكون أقل من 5000 حرف');
+            goalsTextarea.focus();
+            return false;
+        }
+    });
+    
+    // Auto-resize textarea
+    goalsTextarea.on('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.max(150, this.scrollHeight) + 'px';
+    });
+    
+    // Focus on textarea when modal opens
+    setTimeout(() => {
+        goalsTextarea.focus();
+    }, 100);
+    
+    // Keyboard shortcuts
+    goalsTextarea.on('keydown', function(e) {
+        // Ctrl+Enter to submit
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            $('#goalForm').submit();
+        }
+        
+        // Tab for indentation
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const start = this.selectionStart;
+            const end = this.selectionEnd;
+            
+            // Insert tab
+            this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+            this.selectionStart = this.selectionEnd = start + 4;
+        }
+    });
+});
+</script>

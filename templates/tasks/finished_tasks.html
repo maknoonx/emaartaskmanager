@@ -1,0 +1,537 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - جمعية إعمار{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/tasks.css' %}" />
+{% endblock %}
+
+{% block content %}
+<!-- CSRF Token Hidden Input -->
+{% csrf_token %}
+
+<!-- Finished Tasks Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="card-title mb-0">
+                        <i class="bx bx-check-circle me-2"></i>
+                        المهام المكتملة
+                    </h4>
+                    <p class="text-muted mb-0">عرض وإدارة المهام المكتملة</p>
+                </div>
+                <a href="{% url 'tasks:my_tasks' %}" class="btn btn-outline-primary">
+                    <i class="bx bx-arrow-back me-1"></i>
+                    العودة إلى مهامي
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 col-sm-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar flex-shrink-0 me-3">
+                        <span class="avatar-initial rounded bg-label-success">
+                            <i class="bx bx-check-circle"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">{{ total_finished }}</h5>
+                        <small class="text-muted">إجمالي المهام المكتملة</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card filter-section">
+            <div class="card-body">
+                <form method="GET" class="row g-3" id="filterForm">
+                    <div class="col-md-3">
+                        <label class="form-label">البحث</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="search" 
+                                   value="{{ search_query }}" 
+                                   placeholder="ابحث في المهام المكتملة...">
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="bx bx-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">المشروع</label>
+                        <select class="form-select" name="project">
+                            <option value="">جميع المشاريع</option>
+                            {% for project in projects %}
+                            <option value="{{ project.pk }}" {% if project_filter == project.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ project.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">المنشئ</label>
+                        <select class="form-select" name="creator">
+                            <option value="">جميع المنشئين</option>
+                            {% for creator in creators %}
+                            <option value="{{ creator.pk }}" {% if creator_filter == creator.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ creator.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">المُعيّن إلى</label>
+                        <select class="form-select" name="assigned">
+                            <option value="">جميع الموظفين</option>
+                            {% for user in assigned_users %}
+                            <option value="{{ user.pk }}" {% if assigned_filter == user.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ user.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">تطبيق</button>
+                        <a href="{% url 'tasks:finished_tasks' %}" class="btn btn-outline-secondary">إعادة تعيين</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Finished Tasks Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">قائمة المهام المكتملة</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if page_obj %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>اسم المهمة</th>
+                                <th>المشروع</th>
+                                <th>المنشئ</th>
+                                <th>مُعيّن إلى</th>
+                                <th>تاريخ الإنشاء</th>
+                                <th>تاريخ الإكمال</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in page_obj %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-semibold">{{ task.name }}</span>
+                                        {% if task.detail %}
+                                        <small class="text-muted">{{ task.detail|truncatewords:8 }}</small>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if task.project %}
+                                    <span class="badge bg-label-secondary">{{ task.project.name }}</span>
+                                    {% else %}
+                                    <span class="text-muted fst-italic">بدون مشروع</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-xs me-2">
+                                            {% if task.created_by.profile_picture %}
+                                            <img src="{{ task.created_by.profile_picture.url }}" alt="{{ task.created_by.name }}" class="rounded-circle">
+                                            {% else %}
+                                            <span class="avatar-initial rounded-circle bg-label-info">
+                                                {{ task.created_by.name|first|upper }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">{{ task.created_by.name }}</div>
+                                            <small class="text-muted">{{ task.created_by.job_title }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if task.assigned_to %}
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-xs me-2">
+                                            {% if task.assigned_to.profile_picture %}
+                                            <img src="{{ task.assigned_to.profile_picture.url }}" alt="{{ task.assigned_to.name }}" class="rounded-circle">
+                                            {% else %}
+                                            <span class="avatar-initial rounded-circle bg-label-primary">
+                                                {{ task.assigned_to.name|first|upper }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">{{ task.assigned_to.name }}</div>
+                                            <small class="text-muted">{{ task.assigned_to.job_title }}</small>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-muted fst-italic">مهمة شخصية</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="text-muted">{{ task.created_at|date:"d/m/Y" }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-success fw-semibold">{{ task.updated_at|date:"d/m/Y" }}</span>
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" 
+                                                data-bs-toggle="dropdown">
+                                            الإجراءات
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <a class="dropdown-item task-detail-btn" 
+                                               href="#" data-task-id="{{ task.pk }}">
+                                                <i class="bx bx-show me-1"></i>
+                                                عرض التفاصيل
+                                            </a>
+                                            <!-- تحقق من صلاحية تغيير الحالة بطريقة صحيحة -->
+                                            {% with can_change=task.can_change_status_by %}
+                                                {% if can_change %}
+                                                <a class="dropdown-item task-toggle-status-btn" 
+                                                   href="#" data-task-id="{{ task.pk }}">
+                                                    <i class="bx bx-refresh me-1"></i>
+                                                    إعادة إلى جديد
+                                                </a>
+                                                {% endif %}
+                                            {% endwith %}
+                                            <!-- تحقق من صلاحية التعديل بطريقة صحيحة -->
+                                            {% with can_edit=task.can_be_edited_by %}
+                                                {% if can_edit %}
+                                                <div class="dropdown-divider"></div>
+                                                <a class="dropdown-item task-edit-btn" 
+                                                   href="#" data-task-id="{{ task.pk }}">
+                                                    <i class="bx bx-edit me-1"></i>
+                                                    تعديل
+                                                </a>
+                                                {% endif %}
+                                            {% endwith %}
+                                            <!-- تحقق من صلاحية الحذف بطريقة صحيحة -->
+                                            {% with can_delete=task.can_be_deleted_by %}
+                                                {% if can_delete %}
+                                                <a class="dropdown-item text-danger task-delete-btn" 
+                                                   href="#" data-task-id="{{ task.pk }}" 
+                                                   data-task-name="{{ task.name }}">
+                                                    <i class="bx bx-trash me-1"></i>
+                                                    حذف
+                                                </a>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <div class="card-footer">
+                    <nav aria-label="Finished tasks pagination">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if project_filter %}&project={{ project_filter }}{% endif %}{% if creator_filter %}&creator={{ creator_filter }}{% endif %}{% if assigned_filter %}&assigned={{ assigned_filter }}{% endif %}">
+                                        <i class="bx bx-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if project_filter %}&project={{ project_filter }}{% endif %}{% if creator_filter %}&creator={{ creator_filter }}{% endif %}{% if assigned_filter %}&assigned={{ assigned_filter }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if project_filter %}&project={{ project_filter }}{% endif %}{% if creator_filter %}&creator={{ creator_filter }}{% endif %}{% if assigned_filter %}&assigned={{ assigned_filter }}{% endif %}">
+                                        <i class="bx bx-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+                
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="avatar avatar-xl mx-auto mb-3">
+                        <span class="avatar-initial rounded bg-label-secondary">
+                            <i class="bx bx-check-circle bx-lg"></i>
+                        </span>
+                    </div>
+                    <h5 class="mb-2">لا توجد مهام مكتملة</h5>
+                    <p class="text-muted mb-4">لم يتم العثور على أي مهام مكتملة بناءً على معايير البحث المحددة</p>
+                    <a href="{% url 'tasks:my_tasks' %}" class="btn btn-primary">
+                        <i class="bx bx-arrow-back me-1"></i>
+                        العودة إلى مهامي
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Task Detail Modal -->
+<div class="modal fade" id="taskDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <!-- Modal content will be loaded here via AJAX -->
+        </div>
+    </div>
+</div>
+
+<!-- Task Form Modal -->
+<div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <!-- Modal content will be loaded here via AJAX -->
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <div class="avatar avatar-xl mx-auto mb-3">
+                        <span class="avatar-initial rounded bg-label-danger">
+                            <i class="bx bx-trash bx-lg"></i>
+                        </span>
+                    </div>
+                    <h5 class="mb-2">هل أنت متأكد؟</h5>
+                    <p class="text-muted mb-4" id="deleteConfirmText">
+                        هل تريد حذف المهمة؟ لن يمكن التراجع عن هذا الإجراء.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Finished Tasks JavaScript - Reuse TaskManager from my_tasks.html
+$(document).ready(function() {
+    // Initialize TaskManager if not already loaded
+    if (typeof TaskManager !== 'undefined') {
+        TaskManager.init();
+    } else {
+        // Define a simplified version for this page
+        window.TaskManager = {
+            showDetail: function(taskId) {
+                this.loadModal(`/tasks/tasks/${taskId}/`, '#taskDetailModal', 'تفاصيل المهمة');
+            },
+            
+            showEditForm: function(taskId) {
+                this.loadModal(`/tasks/tasks/${taskId}/edit/`, '#taskModal', 'تعديل المهمة');
+            },
+            
+            toggleTaskStatus: function(taskId) {
+                if (!confirm('هل تريد إعادة هذه المهمة إلى حالة "جديد"؟')) return;
+                
+                // Get CSRF token
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+                
+                $.ajax({
+                    url: `/tasks/tasks/${taskId}/toggle-status/`,
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken
+                    },
+                    data: {
+                        'csrfmiddlewaretoken': csrfToken
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.message);
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            alert(response.error || 'حدث خطأ أثناء تحديث الحالة');
+                        }
+                    },
+                    error: function() {
+                        alert('حدث خطأ أثناء تحديث حالة المهمة');
+                    }
+                });
+            },
+            
+            showDeleteConfirm: function(taskId, taskName) {
+                const modal = $('#deleteConfirmModal');
+                const confirmBtn = $('#confirmDeleteBtn');
+                const confirmText = $('#deleteConfirmText');
+                
+                confirmBtn.data('task-id', taskId);
+                confirmText.text(`هل تريد حذف المهمة "${taskName}"؟ لن يمكن التراجع عن هذا الإجراء.`);
+                
+                modal.modal('show');
+            },
+            
+            loadModal: function(url, modalSelector, title) {
+                const modal = $(modalSelector);
+                const modalContent = modal.find('.modal-content');
+                
+                modalContent.html(`
+                    <div class="modal-header">
+                        <h5 class="modal-title">${title}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center py-5">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">جاري التحميل...</span>
+                        </div>
+                        <p class="text-muted">جاري تحميل البيانات...</p>
+                    </div>
+                `);
+                modal.modal('show');
+                
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+                
+                $.ajax({
+                    url: url,
+                    method: 'GET',
+                    headers: { 
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken
+                    },
+                    success: function(response) {
+                        modalContent.html(response);
+                    },
+                    error: function() {
+                        modalContent.html(`
+                            <div class="modal-header">
+                                <h5 class="modal-title text-danger">خطأ</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body text-center py-5">
+                                <p class="text-muted">حدث خطأ أثناء تحميل البيانات</p>
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إغلاق</button>
+                            </div>
+                        `);
+                    }
+                });
+            }
+        };
+    }
+    
+    // Filter form auto-submit
+    $('#filterForm select').on('change', function() {
+        $('#filterForm').submit();
+    });
+    
+    // Event handlers
+    $(document).on('click', '.task-detail-btn', function(e) {
+        e.preventDefault();
+        const taskId = $(this).data('task-id');
+        TaskManager.showDetail(taskId);
+    });
+    
+    $(document).on('click', '.task-edit-btn', function(e) {
+        e.preventDefault();
+        const taskId = $(this).data('task-id');
+        TaskManager.showEditForm(taskId);
+    });
+    
+    $(document).on('click', '.task-toggle-status-btn', function(e) {
+        e.preventDefault();
+        const taskId = $(this).data('task-id');
+        TaskManager.toggleTaskStatus(taskId);
+    });
+    
+    $(document).on('click', '.task-delete-btn', function(e) {
+        e.preventDefault();
+        const taskId = $(this).data('task-id');
+        const taskName = $(this).data('task-name');
+        TaskManager.showDeleteConfirm(taskId, taskName);
+    });
+    
+    // Delete confirmation
+    $('#confirmDeleteBtn').on('click', function() {
+        const btn = $(this);
+        const taskId = btn.data('task-id');
+        
+        if (!taskId) return;
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        const originalText = btn.html();
+        btn.html('<span class="spinner-border spinner-border-sm me-1"></span>جاري الحذف...');
+        btn.prop('disabled', true);
+        
+        $.ajax({
+            url: `/tasks/tasks/${taskId}/delete/`,
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            },
+            data: {
+                'csrfmiddlewaretoken': csrfToken
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert(response.message);
+                    $('#deleteConfirmModal').modal('hide');
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    alert(response.error || 'حدث خطأ أثناء الحذف');
+                }
+            },
+            error: function() {
+                alert('حدث خطأ أثناء حذف المهمة');
+            },
+            complete: function() {
+                btn.html(originalText);
+                btn.prop('disabled', false);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

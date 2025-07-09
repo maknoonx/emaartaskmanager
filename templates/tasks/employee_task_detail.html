@@ -1,0 +1,302 @@
+<!-- tasks/templates/tasks/employee_task_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - جمعية إعمار{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/employee_tasks.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div class="d-flex align-items-center">
+                    <a href="{% url 'tasks:employee_tasks_list' %}" class="btn btn-sm btn-outline-secondary me-3">
+                        <i class="bx bx-arrow-back me-1"></i>
+                        العودة للقائمة
+                    </a>
+                    <div>
+                        <h4 class="fw-bold mb-2">
+                            <i class="bx bx-user me-2"></i>
+                            مهام {{ employee.name }}
+                        </h4>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-label-primary">{{ employee.job_title }}</span>
+                            <span class="badge bg-label-info">{{ employee.get_section_display_arabic }}</span>
+                            <span class="badge bg-label-secondary">{{ employee.job_number }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-muted small">
+                    <i class="bx bx-info-circle me-1"></i>
+                    عرض للمراجعة فقط
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-1 text-primary">{{ stats.total_assigned }}</h4>
+                            <p class="mb-0 small">مهام مُعيّنة إليه</p>
+                        </div>
+                        <div class="avatar">
+                            <span class="avatar-initial rounded bg-label-primary">
+                                <i class="bx bx-task"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-1 text-info">{{ stats.total_created }}</h4>
+                            <p class="mb-0 small">مهام أنشأها</p>
+                        </div>
+                        <div class="avatar">
+                            <span class="avatar-initial rounded bg-label-info">
+                                <i class="bx bx-plus-circle"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-1 text-success">{{ stats.finished_assigned|add:stats.finished_created }}</h4>
+                            <p class="mb-0 small">مهام مكتملة</p>
+                        </div>
+                        <div class="avatar">
+                            <span class="avatar-initial rounded bg-label-success">
+                                <i class="bx bx-check-circle"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-1 text-warning">{{ stats.pending_assigned|add:stats.pending_created }}</h4>
+                            <p class="mb-0 small">مهام قيد التنفيذ</p>
+                        </div>
+                        <div class="avatar">
+                            <span class="avatar-initial rounded bg-label-warning">
+                                <i class="bx bx-time"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">البحث</label>
+                            <input type="text" class="form-control" name="search" value="{{ search_query }}" 
+                                   placeholder="البحث في أسماء المهام أو التفاصيل">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">المشروع</label>
+                            <select class="form-select" name="project">
+                                <option value="">جميع المشاريع</option>
+                                {% for project in projects %}
+                                <option value="{{ project.id }}" {% if project_filter == project.id|stringformat:"s" %}selected{% endif %}>{{ project.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">الحالة</label>
+                            <select class="form-select" name="status">
+                                {% for key, value in status_choices %}
+                                <option value="{{ key }}" {% if status_filter == key %}selected{% endif %}>{{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bx bx-search me-1"></i>
+                                بحث
+                            </button>
+                            <a href="{% url 'tasks:employee_task_detail' employee.id %}" class="btn btn-outline-secondary">
+                                <i class="bx bx-refresh me-1"></i>
+                                إعادة تعيين
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tasks Sections -->
+    <div class="row">
+        <!-- Tasks Assigned to Employee -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bx bx-user-check me-2"></i>
+                        مهام مُعيّنة إلى {{ employee.name }}
+                        <span class="badge bg-label-primary ms-2">{{ assigned_tasks.count }}</span>
+                    </h6>
+                </div>
+                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                    {% if assigned_tasks %}
+                        {% for task in assigned_tasks %}
+                        <div class="task-item mb-3 p-3 border rounded {% if task.status == 'finished' %}border-success{% else %}border-warning{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="mb-1">{{ task.name }}</h6>
+                                <span class="badge {% if task.status == 'finished' %}bg-success{% else %}bg-warning{% endif %}">
+                                    {% if task.status == 'finished' %}مكتملة{% else %}جديدة{% endif %}
+                                </span>
+                            </div>
+                            
+                            {% if task.detail %}
+                            <p class="text-muted small mb-2">{{ task.detail|truncatewords:15 }}</p>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-between align-items-center text-muted small">
+                                <div>
+                                    {% if task.project %}
+                                    <span class="badge bg-label-secondary me-2">{{ task.project.name }}</span>
+                                    {% endif %}
+                                    <span>
+                                        <i class="bx bx-user me-1"></i>
+                                        منشئ: {{ task.created_by.name }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <i class="bx bx-time me-1"></i>
+                                    {{ task.created_at|date:"d/m/Y" }}
+                                    {% if task.due_date %}
+                                    <br><i class="bx bx-calendar me-1"></i>
+                                    مطلوب: {{ task.due_date|date:"d/m/Y" }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bx bx-task bx-lg text-muted mb-2"></i>
+                            <p class="text-muted mb-0">لا توجد مهام مُعيّنة</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks Created by Employee -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bx bx-plus-circle me-2"></i>
+                        مهام أنشأها {{ employee.name }}
+                        <span class="badge bg-label-info ms-2">{{ created_tasks.count }}</span>
+                    </h6>
+                </div>
+                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                    {% if created_tasks %}
+                        {% for task in created_tasks %}
+                        <div class="task-item mb-3 p-3 border rounded {% if task.status == 'finished' %}border-success{% else %}border-warning{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="mb-1">{{ task.name }}</h6>
+                                <span class="badge {% if task.status == 'finished' %}bg-success{% else %}bg-warning{% endif %}">
+                                    {% if task.status == 'finished' %}مكتملة{% else %}جديدة{% endif %}
+                                </span>
+                            </div>
+                            
+                            {% if task.detail %}
+                            <p class="text-muted small mb-2">{{ task.detail|truncatewords:15 }}</p>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-between align-items-center text-muted small">
+                                <div>
+                                    {% if task.project %}
+                                    <span class="badge bg-label-secondary me-2">{{ task.project.name }}</span>
+                                    {% endif %}
+                                    {% if task.assigned_to %}
+                                    <span>
+                                        <i class="bx bx-user-check me-1"></i>
+                                        مُعيّن إلى: {{ task.assigned_to.name }}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-warning">
+                                        <i class="bx bx-user-x me-1"></i>
+                                        غير مُعيّن
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <i class="bx bx-time me-1"></i>
+                                    {{ task.created_at|date:"d/m/Y" }}
+                                    {% if task.due_date %}
+                                    <br><i class="bx bx-calendar me-1"></i>
+                                    مطلوب: {{ task.due_date|date:"d/m/Y" }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bx bx-plus-circle bx-lg text-muted mb-2"></i>
+                            <p class="text-muted mb-0">لم ينشئ أي مهام</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Add smooth scrolling for task items
+    $('.task-item').hover(
+        function() {
+            $(this).addClass('shadow-sm');
+        },
+        function() {
+            $(this).removeClass('shadow-sm');
+        }
+    );
+    
+    // Auto-refresh statistics every 30 seconds
+    setInterval(function() {
+        // This could be enhanced to fetch updated statistics via AJAX
+        console.log('Statistics refresh interval - can be implemented as needed');
+    }, 30000);
+});
+</script>
+{% endblock %}

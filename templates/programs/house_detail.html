@@ -1,0 +1,461 @@
+<!-- programs/templates/programs/house_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.action-card {
+    transition: all 0.3s ease;
+    border-radius: 12px;
+    border: 2px solid #e3e6f0;
+    cursor: pointer;
+    height: 150px;
+}
+.action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+.action-card.enabled {
+    border-color: #5a5fef;
+}
+.action-card.enabled:hover {
+    background: linear-gradient(135deg, #5a5fef 0%, #7b68ee 100%);
+    color: white;
+}
+.action-card.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #f8f9fa;
+}
+.action-card.disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+.house-info-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+}
+.info-badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 20px;
+    padding: 5px 15px;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <a href="{% url 'programs:detail' program.pk %}" class="btn btn-outline-secondary me-3">
+                            <i class="bx bx-arrow-back"></i>
+                        </a>
+                        <div>
+                            <h4 class="card-title mb-1">
+                                <i class="bx bx-home me-2"></i>
+                                منزل رقم {{ house.house_number }}
+                            </h4>
+                            <p class="card-subtitle text-muted mb-0">{{ program.name }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- House Info Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card house-info-card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="text-white mb-3">معلومات المنزل</h5>
+                            {% if general_info %}
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <strong>صاحب المنزل:</strong> {{ general_info.owner_name }}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <strong>رقم الهوية:</strong> {{ general_info.id_number }}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <strong>عدد الأفراد:</strong> {{ general_info.number_of_residents }}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <strong>رقم الجوال:</strong> {{ general_info.phone_number }}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <strong>نوع المبنى:</strong> {{ general_info.get_building_type_display }}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <strong>الحي:</strong> {{ general_info.neighborhood|default:"غير محدد" }}
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-auto">
+                                    <span class="info-badge">{{ general_info.bedrooms }} غرف نوم</span>
+                                </div>
+                                <div class="col-auto">
+                                    <span class="info-badge">{{ general_info.bathrooms }} دورات مياه</span>
+                                </div>
+                                <div class="col-auto">
+                                    <span class="info-badge">{{ general_info.living_rooms }} غرف معيشة</span>
+                                </div>
+                                <div class="col-auto">
+                                    <span class="info-badge">{{ general_info.kitchens }} مطابخ</span>
+                                </div>
+                            </div>
+                            {% else %}
+                            <p class="text-white-75 mb-0">لم يتم إدخال المعلومات العامة للمنزل بعد</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="d-flex flex-column align-items-center">
+                                <div class="avatar avatar-xl mb-3">
+                                    <span class="avatar-initial rounded-circle bg-white text-primary">
+                                        <i class="bx bx-home bx-lg"></i>
+                                    </span>
+                                </div>
+                                <h3 class="text-white mb-0">{{ house.house_number }}</h3>
+                                <span class="text-white-75">رقم المنزل</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-cog me-2"></i>
+                        إدارة بيانات المنزل
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- General Info Button -->
+                        <div class="col-md-6 mb-3">
+                            <div class="action-card enabled d-flex flex-column justify-content-center align-items-center text-center"
+                                 onclick="openGeneralInfoModal()">
+                                <div class="mb-3">
+                                    <i class="bx bx-info-circle" style="font-size: 2.5rem;"></i>
+                                </div>
+                                <h5 class="mb-2">معلومات عامة للمنزل</h5>
+                                <p class="mb-0 small">
+                                    {% if has_general_info %}
+                                    تعديل المعلومات العامة للمنزل
+                                    {% else %}
+                                    إضافة المعلومات العامة للمنزل
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Technical Analysis Button -->
+                        <div class="col-md-6 mb-3">
+                            <div class="action-card {% if has_general_info %}enabled{% else %}disabled{% endif %} d-flex flex-column justify-content-center align-items-center text-center"
+                                 {% if has_general_info %}onclick="window.location.href='{% url 'programs:technical_analysis' program.pk house.pk %}'"{% endif %}>
+                                <div class="mb-3">
+                                    <i class="bx bx-analyze" style="font-size: 2.5rem;"></i>
+                                </div>
+                                <h5 class="mb-2">التحليل الفني</h5>
+                                <p class="mb-0 small">
+                                    {% if has_general_info %}
+                                    تحليل تفصيلي لغرف المنزل
+                                    {% else %}
+                                    يجب إكمال المعلومات العامة أولاً
+                                    {% endif %}
+                                </p>
+                                {% if not has_general_info %}
+                                <div class="mt-2">
+                                    <span class="badge bg-warning">مُعطل</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Summary -->
+    {% if general_info %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-list-check me-2"></i>
+                        ملخص حالة المنزل
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="avatar avatar-sm">
+                                        <span class="avatar-initial rounded bg-label-success">
+                                            <i class="bx bx-check"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="small fw-semibold">المعلومات العامة</div>
+                                    <div class="small text-muted">مكتملة</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="avatar avatar-sm">
+                                        <span class="avatar-initial rounded {% if house.room_details.exists %}bg-label-success{% else %}bg-label-warning{% endif %}">
+                                            <i class="bx {% if house.room_details.exists %}bx-check{% else %}bx-time{% endif %}"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="small fw-semibold">التحليل الفني</div>
+                                    <div class="small text-muted">
+                                        {% if house.room_details.exists %}
+                                        {{ house.room_details.count }} غرفة مُحللة
+                                        {% else %}
+                                        غير مكتمل
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="avatar avatar-sm">
+                                        <span class="avatar-initial rounded bg-label-info">
+                                            <i class="bx bx-area"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="small fw-semibold">مساحة المنزل</div>
+                                    <div class="small text-muted">{{ general_info.house_area }} م²</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="avatar avatar-sm">
+                                        <span class="avatar-initial rounded bg-label-primary">
+                                            <i class="bx bx-area"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="small fw-semibold">مساحة القطعة</div>
+                                    <div class="small text-muted">{{ general_info.plot_area }} م²</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- General Info Modal -->
+<div class="modal fade" id="generalInfoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bx bx-info-circle me-2"></i>
+                    معلومات عامة للمنزل
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="generalInfoContent">
+                <!-- Content will be loaded here -->
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">جاري التحميل...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openGeneralInfoModal() {
+    const modal = new bootstrap.Modal(document.getElementById('generalInfoModal'));
+    const contentDiv = document.getElementById('generalInfoContent');
+    
+    // Show loading spinner
+    contentDiv.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">جاري التحميل...</span>
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+    
+    // Load form content
+    fetch('{% url "programs:house_general_info" program.pk house.pk %}', {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        contentDiv.innerHTML = html;
+        
+        // Setup form submission
+        const form = contentDiv.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitGeneralInfoForm(form, modal);
+            });
+        }
+    })
+    .catch(error => {
+        contentDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bx bx-error me-2"></i>
+                حدث خطأ في تحميل النموذج. يرجى المحاولة مرة أخرى.
+            </div>
+        `;
+    });
+}
+
+function submitGeneralInfoForm(form, modal) {
+    const formData = new FormData(form);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    
+    // Disable submit button
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="bx bx-loader bx-spin me-1"></i>جاري الحفظ...';
+    
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            modal.hide();
+            // Show success message and reload page
+            showSuccessMessage(data.message);
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            // Show errors
+            showFormErrors(data.errors, form);
+        }
+    })
+    .catch(error => {
+        showErrorMessage('حدث خطأ في الحفظ. يرجى المحاولة مرة أخرى.');
+    })
+    .finally(() => {
+        // Re-enable submit button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bx bx-check me-1"></i>حفظ';
+    });
+}
+
+function showSuccessMessage(message) {
+    // Create and show success toast/alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        <i class="bx bx-check me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+function showErrorMessage(message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        <i class="bx bx-error me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+function showFormErrors(errors, form) {
+    // Clear previous errors
+    form.querySelectorAll('.text-danger').forEach(el => el.remove());
+    
+    // Show new errors
+    for (const [field, fieldErrors] of Object.entries(errors)) {
+        const fieldElement = form.querySelector(`[name="${field}"]`);
+        if (fieldElement) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'text-danger small mt-1';
+            errorDiv.innerHTML = fieldErrors.join('<br>');
+            fieldElement.parentNode.appendChild(errorDiv);
+        }
+    }
+}
+
+// Add hover effects
+document.addEventListener('DOMContentLoaded', function() {
+    const actionCards = document.querySelectorAll('.action-card.enabled');
+    
+    actionCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            if (!this.classList.contains('disabled')) {
+                this.style.transform = 'translateY(-5px)';
+            }
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            if (!this.classList.contains('disabled')) {
+                this.style.transform = 'translateY(0)';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,279 @@
+<div class="modal-header">
+    <h5 class="modal-title">
+        <i class="bx bx-user me-2"></i>
+        {% if form_action == 'edit' %}تعديل الموظف{% else %}إضافة موظف جديد{% endif %}
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<form id="employeeForm" method="POST" 
+      action="{% if form_action == 'edit' %}{% url 'employees:edit' employee.pk %}{% else %}{% url 'employees:create' %}{% endif %}">
+    {% csrf_token %}
+    
+    <div class="modal-body">
+        <!-- Alert container for form errors -->
+        <div class="alert alert-danger d-none" id="formErrorAlert">
+            <ul class="mb-0" id="formErrorList"></ul>
+        </div>
+        
+        <!-- Account Information Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="text-primary mb-3">
+                    <i class="bx bx-user-circle me-1"></i>
+                    معلومات الحساب
+                </h6>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label required">اسم المستخدم</label>
+                <input type="text" class="form-control" name="username" 
+                       value="{% if employee %}{{ employee.username }}{% endif %}" 
+                       placeholder="أدخل اسم المستخدم" required>
+                <div class="form-text">اسم المستخدم للدخول إلى النظام</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label">كلمة المرور</label>
+                <div class="input-group">
+                    <input type="password" class="form-control" name="password" 
+                           placeholder="{% if form_action == 'edit' %}اتركه فارغاً لعدم التغيير{% else %}أدخل كلمة المرور{% endif %}"
+                           {% if form_action == 'create' %}required{% endif %}>
+                    <button type="button" class="btn btn-outline-secondary" id="togglePassword">
+                        <i class="bx bx-show"></i>
+                    </button>
+                </div>
+                {% if form_action == 'edit' %}
+                <div class="form-text">اتركه فارغاً إذا كنت لا تريد تغيير كلمة المرور</div>
+                {% else %}
+                <div class="form-text">كلمة المرور الافتراضية: 123456</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Personal Information Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="text-primary mb-3">
+                    <i class="bx bx-id-card me-1"></i>
+                    المعلومات الشخصية
+                </h6>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label required">الاسم الكامل</label>
+                <input type="text" class="form-control" name="name" 
+                       value="{% if employee %}{{ employee.name }}{% endif %}" 
+                       placeholder="أدخل الاسم الكامل" required>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label required">البريد الإلكتروني</label>
+                <input type="email" class="form-control" name="email" 
+                       value="{% if employee %}{{ employee.email }}{% endif %}" 
+                       placeholder="example@imar.org.sa" required>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label required">رقم الجوال</label>
+                <input type="tel" class="form-control" name="mobile_number" 
+                       value="{% if employee %}{{ employee.mobile_number }}{% endif %}" 
+                       placeholder="0501234567" required
+                       pattern="^(\+?966[0-9]{9}|05[0-9]{8})$">
+                <div class="form-text">مثال: 0501234567 أو +966501234567</div>
+            </div>
+        </div>
+        
+        <!-- Job Information Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="text-primary mb-3">
+                    <i class="bx bx-briefcase me-1"></i>
+                    المعلومات الوظيفية
+                </h6>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label required">الرقم الوظيفي</label>
+                <input type="text" class="form-control" name="job_number" 
+                       value="{% if employee %}{{ employee.job_number }}{% endif %}" 
+                       placeholder="مثال: EMP001" required>
+                <div class="form-text">رقم فريد لكل موظف</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label required">المسمى الوظيفي</label>
+                <input type="text" class="form-control" name="job_title" 
+                       value="{% if employee %}{{ employee.job_title }}{% endif %}" 
+                       placeholder="أدخل المسمى الوظيفي" required>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label required">القسم</label>
+                <select class="form-select" name="section" required>
+                    <option value="">اختر القسم</option>
+                    {% for value, label in section_choices %}
+                    <option value="{{ value }}" 
+                            {% if employee and employee.section == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label">الحالة</label>
+                <div class="form-check form-switch mt-2">
+                    <input class="form-check-input" type="checkbox" name="is_active_employee" 
+                           id="isActiveEmployee" 
+                           {% if not employee or employee.is_active_employee %}checked{% endif %}>
+                    <label class="form-check-label" for="isActiveEmployee">
+                        موظف نشط
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Additional Information Section -->
+        <div class="row">
+            <div class="col-12">
+                <h6 class="text-primary mb-3">
+                    <i class="bx bx-note me-1"></i>
+                    معلومات إضافية
+                </h6>
+            </div>
+            
+            <div class="col-12 mb-3">
+                <label class="form-label">ملاحظات</label>
+                <textarea class="form-control" name="notes" rows="3" 
+                          placeholder="أدخل أي ملاحظات إضافية عن الموظف">{% if employee %}{{ employee.notes }}{% endif %}</textarea>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            إلغاء
+        </button>
+        <button type="submit" class="btn btn-primary" id="saveEmployeeBtn">
+            <span class="btn-text">
+                {% if form_action == 'edit' %}
+                <i class="bx bx-save me-1"></i>حفظ التغييرات
+                {% else %}
+                <i class="bx bx-plus me-1"></i>إضافة الموظف
+                {% endif %}
+            </span>
+            <span class="spinner-border spinner-border-sm d-none" role="status">
+                <span class="visually-hidden">جاري الحفظ...</span>
+            </span>
+        </button>
+    </div>
+</form>
+
+<script>
+$(document).ready(function() {
+    // Password toggle functionality
+    $('#togglePassword').on('click', function() {
+        const passwordInput = $('input[name="password"]');
+        const icon = $(this).find('i');
+        
+        if (passwordInput.attr('type') === 'password') {
+            passwordInput.attr('type', 'text');
+            icon.removeClass('bx-show').addClass('bx-hide');
+        } else {
+            passwordInput.attr('type', 'password');
+            icon.removeClass('bx-hide').addClass('bx-show');
+        }
+    });
+    
+    // Auto-generate username from email
+    $('input[name="email"]').on('blur', function() {
+        const email = $(this).val();
+        const usernameInput = $('input[name="username"]');
+        
+        if (email && !usernameInput.val()) {
+            const username = email.split('@')[0];
+            usernameInput.val(username);
+        }
+    });
+    
+    // Auto-format mobile number
+    $('input[name="mobile_number"]').on('input', function() {
+        let value = $(this).val().replace(/\D/g, ''); // Remove non-digits
+        
+        if (value.startsWith('966')) {
+            value = '+' + value;
+        } else if (value.startsWith('5') && value.length === 9) {
+            value = '0' + value;
+        }
+        
+        $(this).val(value);
+    });
+    
+    // Form validation and submission
+    $('#employeeForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const form = $(this);
+        const submitBtn = $('#saveEmployeeBtn');
+        const btnText = submitBtn.find('.btn-text');
+        const spinner = submitBtn.find('.spinner-border');
+        const errorAlert = $('#formErrorAlert');
+        const errorList = $('#formErrorList');
+        
+        // Show loading state
+        submitBtn.prop('disabled', true);
+        btnText.addClass('d-none');
+        spinner.removeClass('d-none');
+        errorAlert.addClass('d-none');
+        
+        // Submit form via AJAX
+        $.ajax({
+            url: form.attr('action'),
+            method: 'POST',
+            data: form.serialize(),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Show success message and reload page
+                    if (window.EmployeeManager) {
+                        window.EmployeeManager.showToast('success', response.message);
+                    } else {
+                        alert(response.message);
+                    }
+                    $('#employeeModal').modal('hide');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    // Show error message
+                    errorList.html('<li>' + (response.error || 'حدث خطأ غير متوقع') + '</li>');
+                    errorAlert.removeClass('d-none');
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = 'حدث خطأ غير متوقع';
+                
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMessage = xhr.responseJSON.error;
+                } else if (xhr.status === 400) {
+                    errorMessage = 'البيانات المدخلة غير صحيحة';
+                } else if (xhr.status === 500) {
+                    errorMessage = 'خطأ في الخادم، يرجى المحاولة لاحقاً';
+                }
+                
+                errorList.html('<li>' + errorMessage + '</li>');
+                errorAlert.removeClass('d-none');
+            },
+            complete: function() {
+                // Reset loading state
+                submitBtn.prop('disabled', false);
+                btnText.removeClass('d-none');
+                spinner.addClass('d-none');
+            }
+        });
+    });
+});
+</script>

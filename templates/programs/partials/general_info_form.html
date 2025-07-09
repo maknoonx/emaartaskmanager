@@ -1,0 +1,269 @@
+<!-- programs/templates/programs/partials/general_info_form.html -->
+<form method="post" action="{% url 'programs:house_general_info' program.pk house.pk %}" novalidate>
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Owner Name -->
+        <div class="col-md-6 mb-3">
+            <label for="{{ form.owner_name.id_for_label }}" class="form-label">
+                {{ form.owner_name.label }}
+            </label>
+            {{ form.owner_name }}
+            {% if form.owner_name.errors %}
+                <div class="text-danger small mt-1">
+                    {% for error in form.owner_name.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- ID Number -->
+        <div class="col-md-6 mb-3">
+            <label for="{{ form.id_number.id_for_label }}" class="form-label">
+                {{ form.id_number.label }}
+            </label>
+            {{ form.id_number }}
+            {% if form.id_number.errors %}
+                <div class="text-danger small mt-1">
+                    {% for error in form.id_number.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Number of Residents -->
+        <div class="col-md-6 mb-3">
+            <label for="{{ form.number_of_residents.id_for_label }}" class="form-label">
+                {{ form.number_of_residents.label }}
+            </label>
+            {{ form.number_of_residents }}
+            {% if form.number_of_residents.errors %}
+                <div class="text-danger small mt-1">
+                    {% for error in form.number_of_residents.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Phone Number -->
+        <div class="col-md-6 mb-3">
+            <label for="{{ form.phone_number.id_for_label }}" class="form-label">
+                {{ form.phone_number.label }}
+            </label>
+            {{ form.phone_number }}
+            {% if form.phone_number.errors %}
+                <div class="text-danger small mt-1">
+                    {% for error in form.phone_number.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Neighborhood -->
+        <div class="col-md-6 mb-3">
+            <label for="{{ form.neighborhood.id_for_label }}" class="form-label">
+                {{ form.neighborhood.label }}
+            </label>
+            {{ form.neighborhood }}
+            {% if form.neighborhood.errors %}
+                <div class="text-danger small mt-1">
+                    {% for error in form.neighborhood.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Building Type -->
+        <div class="col-md-6 mb-3">
+            <label for="{{ form.building_type.id_for_label }}" class="form-label">
+                {{ form.building_type.label }}
+            </label>
+            {{ form.building_type }}
+            {% if form.building_type.errors %}
+                <div class="text-danger small mt-1">
+                    {% for error in form.building_type.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Room Counts Section -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <h6 class="card-title mb-0">
+                <i class="bx bx-home me-2"></i>
+                تفاصيل الغرف
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Bedrooms -->
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.bedrooms.id_for_label }}" class="form-label">
+                        {{ form.bedrooms.label }}
+                    </label>
+                    {{ form.bedrooms }}
+                    {% if form.bedrooms.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.bedrooms.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Bathrooms -->
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.bathrooms.id_for_label }}" class="form-label">
+                        {{ form.bathrooms.label }}
+                    </label>
+                    {{ form.bathrooms }}
+                    {% if form.bathrooms.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.bathrooms.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Living Rooms -->
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.living_rooms.id_for_label }}" class="form-label">
+                        {{ form.living_rooms.label }}
+                    </label>
+                    {{ form.living_rooms }}
+                    {% if form.living_rooms.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.living_rooms.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Kitchens -->
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.kitchens.id_for_label }}" class="form-label">
+                        {{ form.kitchens.label }}
+                    </label>
+                    {{ form.kitchens }}
+                    {% if form.kitchens.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.kitchens.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Majlis -->
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.majlis.id_for_label }}" class="form-label">
+                        {{ form.majlis.label }}
+                    </label>
+                    {{ form.majlis }}
+                    {% if form.majlis.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.majlis.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Rooftops -->
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.rooftops.id_for_label }}" class="form-label">
+                        {{ form.rooftops.label }}
+                    </label>
+                    {{ form.rooftops }}
+                    {% if form.rooftops.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.rooftops.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Courtyards -->
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.courtyards.id_for_label }}" class="form-label">
+                        {{ form.courtyards.label }}
+                    </label>
+                    {{ form.courtyards }}
+                    {% if form.courtyards.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.courtyards.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Areas Section -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <h6 class="card-title mb-0">
+                <i class="bx bx-area me-2"></i>
+                المساحات
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Plot Area -->
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.plot_area.id_for_label }}" class="form-label">
+                        {{ form.plot_area.label }}
+                    </label>
+                    {{ form.plot_area }}
+                    {% if form.plot_area.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.plot_area.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- House Area -->
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.house_area.id_for_label }}" class="form-label">
+                        {{ form.house_area.label }}
+                    </label>
+                    {{ form.house_area }}
+                    {% if form.house_area.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.house_area.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bx bx-x me-1"></i>
+            إلغاء
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="bx bx-check me-1"></i>
+            حفظ
+        </button>
+    </div>
+</form>

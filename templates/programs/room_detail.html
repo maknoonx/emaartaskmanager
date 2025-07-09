@@ -1,0 +1,530 @@
+<!-- programs/templates/programs/room_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.room-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+}
+.info-card {
+    border-radius: 12px;
+    border: 1px solid #e3e6f0;
+    transition: all 0.3s ease;
+}
+.info-card:hover {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+.room-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    margin: 0 auto;
+}
+.room-bedroom { background: linear-gradient(45deg, #667eea, #764ba2); }
+.room-bathroom { background: linear-gradient(45deg, #f093fb, #f5576c); }
+.room-living_room { background: linear-gradient(45deg, #4facfe, #00f2fe); }
+.room-kitchen { background: linear-gradient(45deg, #43e97b, #38f9d7); }
+.room-majlis { background: linear-gradient(45deg, #fa709a, #fee140); }
+.room-rooftop { background: linear-gradient(45deg, #a8edea, #fed6e3); }
+.room-courtyard { background: linear-gradient(45deg, #ff9a9e, #fecfef); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <a href="{% url 'programs:technical_analysis' program.pk house.pk %}" class="btn btn-outline-secondary me-3">
+                                <i class="bx bx-arrow-back"></i>
+                            </a>
+                            <div>
+                                <h4 class="card-title mb-1">
+                                    <i class="bx bx-info-circle me-2"></i>
+                                    {{ room_type_display }} {{ room_number }}
+                                </h4>
+                                <p class="card-subtitle text-muted mb-0">منزل رقم {{ house.house_number }} - {{ program.name }}</p>
+                            </div>
+                        </div>
+                        <div>
+                            <a href="{% url 'programs:edit_room_detail' program.pk house.pk room_type room_number %}" class="btn btn-primary">
+                                <i class="bx {% if is_edit %}bx-edit{% else %}bx-plus{% endif %} me-1"></i>
+                                {% if is_edit %}تعديل التفاصيل{% else %}إضافة تفاصيل{% endif %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Info Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card room-header">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="text-white mb-3">تفاصيل {{ room_type_display }} {{ room_number }}</h5>
+                            {% if room_detail %}
+                            <div class="row">
+                                {% if room_detail.area %}
+                                <div class="col-md-4 mb-2">
+                                    <strong>المساحة:</strong> {{ room_detail.area }} م²
+                                </div>
+                                {% endif %}
+                                {% if room_detail.people_count %}
+                                <div class="col-md-4 mb-2">
+                                    <strong>عدد الأشخاص:</strong> {{ room_detail.people_count }}
+                                </div>
+                                {% endif %}
+                                {% if room_detail.furniture_condition %}
+                                <div class="col-md-4 mb-2">
+                                    <strong>حالة الأثاث:</strong> {{ room_detail.get_furniture_condition_display }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="mt-2">
+                                <span class="badge bg-success">
+                                    <i class="bx bx-check me-1"></i>تم التحليل
+                                </span>
+                                <small class="text-white-75 ms-2">
+                                    آخر تحديث: {{ room_detail.updated_at|date:"d/m/Y H:i" }}
+                                </small>
+                            </div>
+                            {% else %}
+                            <p class="text-white-75 mb-3">لم يتم إدخال التفاصيل الفنية لهذه الغرفة بعد</p>
+                            <span class="badge bg-warning">
+                                <i class="bx bx-time me-1"></i>في الانتظار
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="room-icon room-{{ room_type }}">
+                                {% if room_type == 'bedroom' %}
+                                    <i class="bx bx-bed"></i>
+                                {% elif room_type == 'bathroom' %}
+                                    <i class="bx bx-bath"></i>
+                                {% elif room_type == 'living_room' %}
+                                    <i class="bx bx-home"></i>
+                                {% elif room_type == 'kitchen' %}
+                                    <i class="bx bx-restaurant"></i>
+                                {% elif room_type == 'majlis' %}
+                                    <i class="bx bx-group"></i>
+                                {% elif room_type == 'rooftop' %}
+                                    <i class="bx bx-building"></i>
+                                {% elif room_type == 'courtyard' %}
+                                    <i class="bx bx-landscape"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Details -->
+    {% if room_detail %}
+    <div class="row">
+        <!-- Basic Information -->
+        <div class="col-md-6 mb-4">
+            <div class="card info-card h-100">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bx bx-info-circle me-2"></i>
+                        معلومات أساسية
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if room_detail.area %}
+                        <div class="col-12 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">المساحة:</span>
+                                <span class="fw-semibold">{{ room_detail.area }} م²</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if room_detail.people_count %}
+                        <div class="col-12 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">عدد الأشخاص:</span>
+                                <span class="fw-semibold">{{ room_detail.people_count }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if room_detail.furniture_condition %}
+                        <div class="col-12 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">حالة الأثاث:</span>
+                                <span class="badge bg-{% if room_detail.furniture_condition == 'excellent' %}success{% else %}warning{% endif %}">
+                                    {{ room_detail.get_furniture_condition_display }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if room_detail.windows_count %}
+                        <div class="col-12 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">عدد الشبابيك:</span>
+                                <span class="fw-semibold">{{ room_detail.windows_count }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if room_detail.doors_count %}
+                        <div class="col-12 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">عدد الأبواب:</span>
+                                <span class="fw-semibold">{{ room_detail.doors_count }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conditions -->
+        <div class="col-md-6 mb-4">
+            <div class="card info-card h-100">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bx bx-cog me-2"></i>
+                        حالة العناصر
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if room_detail.windows_condition %}
+                        <div class="col-12 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">حالة الشبابيك:</span>
+                                <span class="badge bg-{% if room_detail.windows_condition == 'excellent' %}success{% elif room_detail.windows_condition == 'maintenance' %}warning{% else %}danger{% endif %}">
+                                    {{ room_detail.get_windows_condition_display }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if room_detail.doors_condition %}
+                        <div class="col-12 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">حالة الأبواب:</span>
+                                <span class="badge bg-{% if room_detail.doors_condition == 'excellent' %}success{% elif room_detail.doors_condition == 'maintenance' %}warning{% else %}danger{% endif %}">
+                                    {{ room_detail.get_doors_condition_display }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if room_detail.ceiling_condition %}
+                        <div class="col-12 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">حالة الأسقف:</span>
+                                <span class="badge bg-{% if room_detail.ceiling_condition == 'excellent' %}success{% elif room_detail.ceiling_condition == 'maintenance' %}warning{% else %}danger{% endif %}">
+                                    {{ room_detail.get_ceiling_condition_display }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if room_detail.wall_condition %}
+                        <div class="col-12 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">حالة الجدران:</span>
+                                <span class="badge bg-{% if room_detail.wall_condition == 'excellent' %}success{% elif room_detail.wall_condition == 'maintenance' %}warning{% else %}danger{% endif %}">
+                                    {{ room_detail.get_wall_condition_display }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if room_detail.floor_condition %}
+                        <div class="col-12 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">حالة الأرضيات:</span>
+                                <span class="badge bg-{% if room_detail.floor_condition == 'excellent' %}success{% elif room_detail.floor_condition == 'maintenance' %}warning{% else %}danger{% endif %}">
+                                    {{ room_detail.get_floor_condition_display }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Details -->
+        {% if room_detail.ac_count or room_detail.electrical_voltage or room_detail.structural_problems %}
+        <div class="col-md-6 mb-4">
+            <div class="card info-card h-100">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bx bx-wrench me-2"></i>
+                        التفاصيل الفنية
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if room_detail.ac_count %}
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">عدد المكيفات:</span>
+                        <span class="fw-semibold">{{ room_detail.ac_count }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if room_detail.ac_type %}
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">نوع التكييف:</span>
+                        <span class="fw-semibold">{{ room_detail.get_ac_type_display }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if room_detail.electrical_voltage %}
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">الجهد الكهربائي:</span>
+                        <span class="badge bg-{% if room_detail.electrical_voltage == 'excellent' %}success{% else %}warning{% endif %}">
+                            {{ room_detail.get_electrical_voltage_display }}
+                        </span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if room_detail.structural_problems %}
+                    <div class="mb-3">
+                        <span class="text-muted d-block mb-2">مشاكل إنشائية:</span>
+                        {% for problem in room_detail.structural_problems %}
+                        <span class="badge bg-{% if problem == 'no_crack' %}success{% elif problem == 'humidity' %}info{% elif problem == 'normal_crack' %}warning{% else %}danger{% endif %} me-1 mb-1">
+                            {% if problem == 'humidity' %}رطوبة
+                            {% elif problem == 'normal_crack' %}كراك عادي
+                            {% elif problem == 'medium_crack' %}كراك متوسط
+                            {% elif problem == 'dangerous_crack' %}كراك خطير
+                            {% elif problem == 'no_crack' %}لا يوجد كراك
+                            {% endif %}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Special Features (Bathroom/Kitchen specific) -->
+        {% if room_type == 'bathroom' or room_type == 'kitchen' %}
+        <div class="col-md-6 mb-4">
+            <div class="card info-card h-100">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bx bx-droplet me-2"></i>
+                        {% if room_type == 'bathroom' %}مرافق دورة المياه{% else %}مرافق المطبخ{% endif %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if room_detail.plumbing_extensions %}
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">تمديد المواسير:</span>
+                        <span class="fw-semibold">{{ room_detail.get_plumbing_extensions_display }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if room_detail.plumbing_finishing %}
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">حالة التشطيب:</span>
+                        <span class="badge bg-{% if room_detail.plumbing_finishing == 'excellent' %}success{% elif room_detail.plumbing_finishing == 'maintenance' %}warning{% else %}danger{% endif %}">
+                            {{ room_detail.get_plumbing_finishing_display }}
+                        </span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if room_type == 'bathroom' %}
+                        {% if room_detail.heater_condition %}
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">حالة السخان:</span>
+                            <span class="badge bg-{% if room_detail.heater_condition == 'excellent' %}success{% elif room_detail.heater_condition == 'maintenance' %}warning{% else %}danger{% endif %}">
+                                {{ room_detail.get_heater_condition_display }}
+                            </span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if room_detail.ground_tank %}
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">خزان أرضي:</span>
+                            <span class="fw-semibold">{{ room_detail.get_ground_tank_display }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if room_detail.overhead_tank %}
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">خزان علوي:</span>
+                            <span class="fw-semibold">{{ room_detail.get_overhead_tank_display }}</span>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                    
+                    {% if room_type == 'kitchen' and room_detail.kitchen_condition %}
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">حالة المطبخ:</span>
+                        <span class="badge bg-{% if room_detail.kitchen_condition == 'excellent' %}success{% elif room_detail.kitchen_condition == 'maintenance' %}warning{% else %}info{% endif %}">
+                            {{ room_detail.get_kitchen_condition_display }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Courtyard/Rooftop specific -->
+        {% if room_type == 'courtyard' %}
+        <div class="col-md-6 mb-4">
+            <div class="card info-card h-100">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bx bx-landscape me-2"></i>
+                        تفاصيل الحوش
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if room_detail.courtyard_area %}
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">مساحة الحوش:</span>
+                        <span class="fw-semibold">{{ room_detail.courtyard_area }} م²</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if room_detail.courtyard_floor_type %}
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">نوع الأرضيات:</span>
+                        <span class="fw-semibold">{{ room_detail.get_courtyard_floor_type_display }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if room_detail.courtyard_wall_condition %}
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">حالة الجدران:</span>
+                        <span class="badge bg-{% if room_detail.courtyard_wall_condition == 'excellent' %}success{% elif room_detail.courtyard_wall_condition == 'humidity' %}warning{% else %}danger{% endif %}">
+                            {{ room_detail.get_courtyard_wall_condition_display }}
+                        </span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if room_detail.exterior_paint %}
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">الدهان الخارجي:</span>
+                        <span class="badge bg-{% if room_detail.exterior_paint == 'excellent' %}success{% elif room_detail.exterior_paint == 'treated' %}warning{% else %}danger{% endif %}">
+                            {{ room_detail.get_exterior_paint_display }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% elif room_type == 'rooftop' %}
+        <div class="col-md-6 mb-4">
+            <div class="card info-card h-100">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bx bx-building me-2"></i>
+                        تفاصيل السطح
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if room_detail.rooftop_area %}
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">مساحة السطح:</span>
+                        <span class="fw-semibold">{{ room_detail.rooftop_area }} م²</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if room_detail.notes %}
+                    <div class="mb-3">
+                        <span class="text-muted d-block mb-2">ملاحظات:</span>
+                        <p class="small text-dark mb-0">{{ room_detail.notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Notes (if any) -->
+        {% if room_detail.notes and room_type != 'rooftop' %}
+        <div class="col-12 mb-4">
+            <div class="card info-card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bx bx-note me-2"></i>
+                        ملاحظات إضافية
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ room_detail.notes }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% else %}
+    <!-- Empty State -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <div class="misc-wrapper">
+                        <div class="mb-4">
+                            <i class="bx bx-info-circle" style="font-size: 4rem; color: #8592a3;"></i>
+                        </div>
+                        <h4 class="mb-2">لا توجد تفاصيل فنية</h4>
+                        <p class="mb-4 text-muted">لم يتم إدخال التفاصيل الفنية لهذه الغرفة بعد</p>
+                        <a href="{% url 'programs:edit_room_detail' program.pk house.pk room_type room_number %}" class="btn btn-primary">
+                            <i class="bx bx-plus me-1"></i>
+                            إضافة تفاصيل فنية
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add smooth animations
+document.addEventListener('DOMContentLoaded', function() {
+    const infoCards = document.querySelectorAll('.info-card');
+    
+    infoCards.forEach((card, index) => {
+        // Add staggered animation
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

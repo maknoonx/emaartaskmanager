@@ -1,0 +1,691 @@
+/* Monthly Goals Styles - Arabic RTL Support */
+
+/* ====== MONTHLY GOALS SPECIFIC VARIABLES ====== */
+:root {
+    --goal-primary: #007AFF;
+    --goal-success: #34C759;
+    --goal-warning: #FF9500;
+    --goal-danger: #FF3B30;
+    --goal-info: #AF52DE;
+    --goal-light: #F2F2F7;
+    --goal-dark: #1C1C1E;
+    --goal-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --goal-shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.15);
+    --goal-border-radius: 12px;
+    --goal-transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ====== STATS CARDS ====== */
+.goal-stats-card {
+    transition: var(--goal-transition);
+    border: none;
+    box-shadow: var(--goal-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.goal-stats-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--goal-primary);
+    transform: scaleY(0);
+    transition: var(--goal-transition);
+}
+
+.goal-stats-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--goal-shadow-lg);
+}
+
+.goal-stats-card:hover::before {
+    transform: scaleY(1);
+}
+
+.goal-stats-card .avatar {
+    width: 3rem;
+    height: 3rem;
+}
+
+.goal-stats-card .avatar-initial {
+    font-size: 1.5rem;
+}
+
+/* ====== MONTHLY GOALS GRID ====== */
+.monthly-goals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.monthly-goal-card {
+    background: #FFFFFF;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--goal-border-radius);
+    box-shadow: var(--goal-shadow);
+    transition: var(--goal-transition);
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+}
+
+.monthly-goal-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--goal-shadow-lg);
+}
+
+.monthly-goal-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--goal-primary), var(--goal-info));
+}
+
+.monthly-goal-card.current-month::before {
+    background: linear-gradient(90deg, var(--goal-success), var(--goal-primary));
+}
+
+.monthly-goal-card.past-month::before {
+    background: linear-gradient(90deg, var(--gray-400), var(--gray-500));
+}
+
+.monthly-goal-card.future-month::before {
+    background: linear-gradient(90deg, var(--goal-warning), var(--goal-info));
+}
+
+.monthly-goal-card-header {
+    padding: 1.5rem 1.5rem 1rem;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.monthly-goal-card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.monthly-goal-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--gray-600);
+}
+
+.monthly-goal-card-body {
+    padding: 1rem 1.5rem;
+}
+
+.monthly-goal-preview {
+    color: var(--gray-600);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.monthly-goal-card-footer {
+    padding: 1rem 1.5rem;
+    background: var(--gray-50);
+    border-top: 1px solid var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.goal-count-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: rgba(0, 122, 255, 0.12);
+    color: var(--goal-primary);
+}
+
+.goal-count-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.goal-date-info {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* ====== MONTH STATUS INDICATORS ====== */
+.month-status-indicator {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.month-status-current {
+    background: rgba(52, 199, 89, 0.12);
+    color: var(--goal-success);
+}
+
+.month-status-past {
+    background: rgba(142, 142, 147, 0.12);
+    color: var(--gray-600);
+}
+
+.month-status-future {
+    background: rgba(255, 149, 0, 0.12);
+    color: var(--goal-warning);
+}
+
+/* ====== MODAL ENHANCEMENTS ====== */
+.modal-content {
+    border: none;
+    border-radius: var(--goal-border-radius);
+    box-shadow: var(--goal-shadow-lg);
+}
+
+.modal-header {
+    background: var(--goal-light);
+    border-bottom: 1px solid var(--gray-200);
+    border-radius: var(--goal-border-radius) var(--goal-border-radius) 0 0;
+}
+
+.modal-title {
+    color: var(--goal-primary);
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-footer {
+    background: var(--goal-light);
+    border-top: 1px solid var(--gray-200);
+    border-radius: 0 0 var(--goal-border-radius) var(--goal-border-radius);
+}
+
+/* ====== FORM ENHANCEMENTS ====== */
+.form-label.required::after {
+    content: ' *';
+    color: var(--goal-danger);
+    font-weight: bold;
+}
+
+.form-control:focus {
+    border-color: var(--goal-primary);
+    box-shadow: 0 0 0 0.125rem rgba(0, 122, 255, 0.25);
+}
+
+.form-select:focus {
+    border-color: var(--goal-primary);
+    box-shadow: 0 0 0 0.125rem rgba(0, 122, 255, 0.25);
+}
+
+.goals-textarea {
+    min-height: 150px;
+    resize: vertical;
+}
+
+.goals-display {
+    background: var(--gray-50);
+    border-radius: var(--goal-border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.goals-text {
+    white-space: pre-wrap;
+    line-height: 1.6;
+    color: var(--gray-700);
+    margin: 0;
+}
+
+/* Form sections styling */
+.modal-body h6 {
+    border-bottom: 2px solid var(--goal-primary);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem !important;
+}
+
+/* ====== BUTTON ENHANCEMENTS ====== */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: var(--goal-transition);
+    border-width: 1px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--goal-primary), #0056b3);
+    border-color: var(--goal-primary);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #0056b3, var(--goal-primary));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+
+/* ====== DROPDOWN ENHANCEMENTS ====== */
+.dropdown-menu {
+    border: none;
+    box-shadow: var(--goal-shadow-lg);
+    border-radius: var(--goal-border-radius);
+    padding: 0.5rem 0;
+    z-index: 1050;
+    min-width: 160px;
+}
+
+.dropdown-item {
+    padding: 0.75rem 1.25rem;
+    transition: var(--goal-transition);
+    border-radius: 0;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dropdown-item:hover {
+    background: var(--goal-light);
+    color: var(--goal-primary);
+    transform: translateX(-2px);
+}
+
+.dropdown-item i {
+    width: 1.25rem;
+    text-align: center;
+}
+
+.dropdown-divider {
+    margin: 0.5rem 0;
+    border-color: var(--gray-200);
+}
+
+/* ====== EMPTY STATE ====== */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-state .avatar {
+    margin-bottom: 1.5rem;
+    opacity: 0.7;
+}
+
+.empty-state h5 {
+    color: var(--gray-700);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: var(--gray-500);
+    max-width: 400px;
+    margin: 0 auto 2rem;
+}
+
+/* ====== LOADING STATES ====== */
+.btn .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: var(--goal-border-radius);
+}
+
+/* ====== ALERT ENHANCEMENTS ====== */
+.alert {
+    border: none;
+    border-radius: var(--goal-border-radius);
+    border-left: 4px solid;
+}
+
+.alert-success {
+    border-left-color: var(--goal-success);
+    background: rgba(52, 199, 89, 0.1);
+    color: #1a5928;
+}
+
+.alert-danger {
+    border-left-color: var(--goal-danger);
+    background: rgba(255, 59, 48, 0.1);
+    color: #7a1712;
+}
+
+.alert-warning {
+    border-left-color: var(--goal-warning);
+    background: rgba(255, 149, 0, 0.1);
+    color: #8b4513;
+}
+
+.alert-info {
+    border-left-color: var(--goal-info);
+    background: rgba(175, 82, 222, 0.1);
+    color: #4a1a5c;
+}
+
+/* ====== RESPONSIVE DESIGN ====== */
+@media (max-width: 1199.98px) {
+    .monthly-goals-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .modal-dialog {
+        margin: 1rem;
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .goal-stats-card {
+        margin-bottom: 1rem;
+    }
+    
+    .monthly-goals-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+}
+
+@media (max-width: 767.98px) {
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .modal-body h6 {
+        font-size: 1rem;
+        margin-bottom: 1rem !important;
+    }
+    
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .btn-group .btn {
+        margin: 0;
+    }
+    
+    .monthly-goals-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .monthly-goal-card-header {
+        padding: 1rem;
+    }
+    
+    .monthly-goal-card-body {
+        padding: 0.75rem 1rem;
+    }
+    
+    .monthly-goal-card-footer {
+        padding: 1rem;
+    }
+    
+    .monthly-goal-card-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .goal-stats-card .card-body {
+        padding: 1rem;
+    }
+    
+    .goal-stats-card .avatar {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+    
+    .goal-stats-card .avatar-initial {
+        font-size: 1.25rem;
+    }
+    
+    .modal-body .row .col-md-6 {
+        margin-bottom: 1rem;
+    }
+    
+    .dropdown-menu {
+        position: static !important;
+        transform: none !important;
+        box-shadow: none;
+        border: 1px solid var(--gray-200);
+        margin-top: 0.5rem;
+    }
+}
+
+/* ====== PRINT STYLES ====== */
+@media print {
+    .btn,
+    .dropdown,
+    .modal,
+    .empty-state {
+        display: none !important;
+    }
+    
+    .monthly-goals-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .monthly-goal-card {
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+    }
+    
+    .goal-count-badge {
+        border: 1px solid currentColor !important;
+        background: transparent !important;
+    }
+    
+    .monthly-goal-card::before {
+        display: none !important;
+    }
+}
+
+/* ====== ACCESSIBILITY ENHANCEMENTS ====== */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+    outline: 2px solid var(--goal-primary);
+    outline-offset: 2px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ====== ANIMATION KEYFRAMES ====== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(0, 122, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 122, 255, 0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.animate-pulse {
+    animation: pulse 2s infinite;
+}
+
+/* ====== CUSTOM SCROLLBAR ====== */
+.goals-textarea::-webkit-scrollbar,
+.goals-display::-webkit-scrollbar {
+    width: 4px;
+}
+
+.goals-textarea::-webkit-scrollbar-track,
+.goals-display::-webkit-scrollbar-track {
+    background: var(--gray-100);
+}
+
+.goals-textarea::-webkit-scrollbar-thumb,
+.goals-display::-webkit-scrollbar-thumb {
+    background: var(--gray-300);
+    border-radius: 2px;
+}
+
+.goals-textarea::-webkit-scrollbar-thumb:hover,
+.goals-display::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-400);
+}
+
+/* ====== DARK MODE OVERRIDES (if needed) ====== */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --goal-light: #1c1c1e;
+        --goal-dark: #f2f2f7;
+    }
+    
+    /* Override any dark mode preferences to maintain light theme */
+    .card,
+    .modal-content,
+    .dropdown-menu,
+    .monthly-goal-card {
+        background: #ffffff !important;
+        color: #1c1c1e !important;
+    }
+}
+
+/* ====== SPECIAL GOAL STATES ====== */
+.monthly-goal-card.highlighted {
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3);
+}
+
+.monthly-goal-card.completed {
+    opacity: 0.8;
+    background: rgba(52, 199, 89, 0.02);
+}
+
+/* ====== INTERACTIVE ELEMENTS ====== */
+.monthly-goal-card:hover .monthly-goal-card-title {
+    color: var(--goal-primary);
+}
+
+.monthly-goal-card:hover .dropdown-toggle {
+    opacity: 1;
+    visibility: visible;
+}
+
+.dropdown-toggle {
+    opacity: 0.7;
+    visibility: hidden;
+    transition: var(--goal-transition);
+}
+
+/* ====== UTILITY CLASSES FOR GOALS ====== */
+.goal-urgent {
+    animation: pulse 2s infinite;
+}
+
+.goal-completed {
+    filter: grayscale(0.5);
+}
+
+/* ====== TOAST NOTIFICATION STYLES ====== */
+.toast-container {
+    z-index: 9999;
+}
+
+.toast {
+    border: none;
+    border-radius: var(--goal-border-radius);
+    box-shadow: var(--goal-shadow-lg);
+}
+
+.toast-header {
+    border-bottom: none;
+    border-radius: var(--goal-border-radius) var(--goal-border-radius) 0 0;
+}
+
+.toast-body {
+    border-radius: 0 0 var(--goal-border-radius) var(--goal-border-radius);
+}

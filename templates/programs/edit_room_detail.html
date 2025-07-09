@@ -1,0 +1,863 @@
+<!-- programs/templates/programs/edit_room_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-section {
+    border-radius: 12px;
+    border: 1px solid #e3e6f0;
+    margin-bottom: 20px;
+}
+.section-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #e3e6f0;
+    border-radius: 12px 12px 0 0;
+    padding: 15px 20px;
+}
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border: 1px solid #e3e6f0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+.checkbox-item:hover {
+    background-color: #f8f9fa;
+    border-color: #5a5fef;
+}
+.checkbox-item input:checked + label {
+    color: #5a5fef;
+    font-weight: 500;
+}
+.room-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    margin: 0 auto 15px;
+}
+.room-bedroom { background: linear-gradient(45deg, #667eea, #764ba2); }
+.room-bathroom { background: linear-gradient(45deg, #f093fb, #f5576c); }
+.room-living_room { background: linear-gradient(45deg, #4facfe, #00f2fe); }
+.room-kitchen { background: linear-gradient(45deg, #43e97b, #38f9d7); }
+.room-majlis { background: linear-gradient(45deg, #fa709a, #fee140); }
+.room-rooftop { background: linear-gradient(45deg, #a8edea, #fed6e3); }
+.room-courtyard { background: linear-gradient(45deg, #ff9a9e, #fecfef); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <a href="{% url 'programs:room_detail' program.pk house.pk room_type room_number %}" class="btn btn-outline-secondary me-3">
+                            <i class="bx bx-arrow-back"></i>
+                        </a>
+                        <div class="me-3">
+                            <div class="room-icon room-{{ room_type }}">
+                                {% if room_type == 'bedroom' %}
+                                    <i class="bx bx-bed"></i>
+                                {% elif room_type == 'bathroom' %}
+                                    <i class="bx bx-bath"></i>
+                                {% elif room_type == 'living_room' %}
+                                    <i class="bx bx-home"></i>
+                                {% elif room_type == 'kitchen' %}
+                                    <i class="bx bx-restaurant"></i>
+                                {% elif room_type == 'majlis' %}
+                                    <i class="bx bx-group"></i>
+                                {% elif room_type == 'rooftop' %}
+                                    <i class="bx bx-building"></i>
+                                {% elif room_type == 'courtyard' %}
+                                    <i class="bx bx-landscape"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="card-title mb-1">
+                                {% if is_edit %}تعديل{% else %}إضافة{% endif %} تفاصيل {{ room_type_display }} {{ room_number }}
+                            </h4>
+                            <p class="card-subtitle text-muted mb-0">منزل رقم {{ house.house_number }} - {{ program.name }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <form method="post" novalidate>
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-12">
+                <!-- Basic Information Section -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <h6 class="mb-0">
+                            <i class="bx bx-info-circle me-2"></i>
+                            المعلومات الأساسية
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Area -->
+                            {% if form.area %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.area.id_for_label }}" class="form-label">
+                                    المساحة (م²)
+                                </label>
+                                {{ form.area }}
+                                {% if form.area.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.area.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            <!-- People Count -->
+                            {% if form.people_count %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.people_count.id_for_label }}" class="form-label">
+                                    عدد الأشخاص
+                                </label>
+                                {{ form.people_count }}
+                                {% if form.people_count.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.people_count.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            <!-- Furniture Condition -->
+                            {% if form.furniture_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.furniture_condition.id_for_label }}" class="form-label">
+                                    حالة الأثاث
+                                </label>
+                                {{ form.furniture_condition }}
+                                {% if form.furniture_condition.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.furniture_condition.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            <!-- Windows and Doors -->
+                            {% if form.windows_count %}
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.windows_count.id_for_label }}" class="form-label">
+                                    عدد الشبابيك
+                                </label>
+                                {{ form.windows_count }}
+                                {% if form.windows_count.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.windows_count.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            {% if form.doors_count %}
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.doors_count.id_for_label }}" class="form-label">
+                                    عدد الأبواب
+                                </label>
+                                {{ form.doors_count }}
+                                {% if form.doors_count.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.doors_count.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Construction Details Section -->
+                {% if form.ceiling_type or form.floor_type or form.wall_condition %}
+                <div class="form-section">
+                    <div class="section-header">
+                        <h6 class="mb-0">
+                            <i class="bx bx-building me-2"></i>
+                            التفاصيل الإنشائية
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Ceiling -->
+                            {% if form.ceiling_type %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.ceiling_type.id_for_label }}" class="form-label">
+                                    نوع السقف
+                                </label>
+                                {{ form.ceiling_type }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.ceiling_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.ceiling_condition.id_for_label }}" class="form-label">
+                                    حالة الأسقف
+                                </label>
+                                {{ form.ceiling_condition }}
+                            </div>
+                            {% endif %}
+
+                            <!-- Walls -->
+                            {% if form.wall_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.wall_condition.id_for_label }}" class="form-label">
+                                    حالة الجدران
+                                </label>
+                                {{ form.wall_condition }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.paint_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.paint_condition.id_for_label }}" class="form-label">
+                                    حالة الدهان
+                                </label>
+                                {{ form.paint_condition }}
+                            </div>
+                            {% endif %}
+
+                            <!-- Floors -->
+                            {% if form.floor_type %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.floor_type.id_for_label }}" class="form-label">
+                                    نوع الأرضيات
+                                </label>
+                                {{ form.floor_type }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.floor_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.floor_condition.id_for_label }}" class="form-label">
+                                    حالة الأرضيات
+                                </label>
+                                {{ form.floor_condition }}
+                            </div>
+                            {% endif %}
+
+                            <!-- Other conditions -->
+                            {% if form.windows_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.windows_condition.id_for_label }}" class="form-label">
+                                    حالة الشبابيك
+                                </label>
+                                {{ form.windows_condition }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.doors_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.doors_condition.id_for_label }}" class="form-label">
+                                    حالة الأبواب
+                                </label>
+                                {{ form.doors_condition }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.insulation_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.insulation_condition.id_for_label }}" class="form-label">
+                                    حالة العزل
+                                </label>
+                                {{ form.insulation_condition }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.gypsum_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.gypsum_condition.id_for_label }}" class="form-label">
+                                    حالة الجبس
+                                </label>
+                                {{ form.gypsum_condition }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.level_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.level_condition.id_for_label }}" class="form-label">
+                                    حالة المناسيب
+                                </label>
+                                {{ form.level_condition }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Structural Problems -->
+                        {% if form.structural_problems %}
+                        <div class="mb-3">
+                            <label class="form-label">مشاكل إنشائية</label>
+                            <div class="checkbox-group">
+                                {% for choice in form.structural_problems %}
+                                <div class="checkbox-item">
+                                    {{ choice.tag }}
+                                    <label for="{{ choice.id_for_label }}" class="form-check-label ms-2">
+                                        {{ choice.choice_label }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Electrical & AC Section -->
+                {% if form.electrical_voltage or form.ac_count %}
+                <div class="form-section">
+                    <div class="section-header">
+                        <h6 class="mb-0">
+                            <i class="bx bx-bolt me-2"></i>
+                            الكهرباء والتكييف
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Electrical -->
+                            {% if form.electrical_voltage %}
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.electrical_voltage.id_for_label }}" class="form-label">
+                                    حالة الجهد الكهربائي
+                                </label>
+                                {{ form.electrical_voltage }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.electrical_extensions %}
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.electrical_extensions.id_for_label }}" class="form-label">
+                                    التمديدات الكهربائية
+                                </label>
+                                {{ form.electrical_extensions }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.electrical_finishing %}
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.electrical_finishing.id_for_label }}" class="form-label">
+                                    التشطيبات الكهربائية
+                                </label>
+                                {{ form.electrical_finishing }}
+                            </div>
+                            {% endif %}
+
+                            <!-- AC -->
+                            {% if form.ac_count %}
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.ac_count.id_for_label }}" class="form-label">
+                                    عدد المكيفات
+                                </label>
+                                {{ form.ac_count }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.ac_type %}
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.ac_type.id_for_label }}" class="form-label">
+                                    نوع التكييف
+                                </label>
+                                {{ form.ac_type }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.ac_condition %}
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.ac_condition.id_for_label }}" class="form-label">
+                                    حالة التكييف
+                                </label>
+                                {{ form.ac_condition }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Plumbing Section (Bathroom/Kitchen) -->
+                {% if form.plumbing_extensions %}
+                <div class="form-section">
+                    <div class="section-header">
+                        <h6 class="mb-0">
+                            <i class="bx bx-droplet me-2"></i>
+                            السباكة والمياه
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% if form.plumbing_extensions %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.plumbing_extensions.id_for_label }}" class="form-label">
+                                    تمديد المواسير
+                                </label>
+                                {{ form.plumbing_extensions }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.plumbing_finishing %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.plumbing_finishing.id_for_label }}" class="form-label">
+                                    حالة التشطيب
+                                </label>
+                                {{ form.plumbing_finishing }}
+                            </div>
+                            {% endif %}
+
+                            <!-- Bathroom specific -->
+                            {% if form.heater_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.heater_condition.id_for_label }}" class="form-label">
+                                    حالة السخان
+                                </label>
+                                {{ form.heater_condition }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.extractor_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.extractor_condition.id_for_label }}" class="form-label">
+                                    حالة الشفاط
+                                </label>
+                                {{ form.extractor_condition }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.can_add_bathroom %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.can_add_bathroom.id_for_label }}" class="form-label">
+                                    هل يمكن إضافة دورات مياه؟
+                                </label>
+                                {{ form.can_add_bathroom }}
+                            </div>
+                            {% endif %}
+
+                            <!-- Water Tanks -->
+                            {% if form.ground_tank %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.ground_tank.id_for_label }}" class="form-label">
+                                    هل يوجد خزان أرضي؟
+                                </label>
+                                {{ form.ground_tank }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.overhead_tank %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.overhead_tank.id_for_label }}" class="form-label">
+                                    هل يوجد خزان علوي؟
+                                </label>
+                                {{ form.overhead_tank }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.ground_tank_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.ground_tank_condition.id_for_label }}" class="form-label">
+                                    حالة الخزان الأرضي
+                                </label>
+                                {{ form.ground_tank_condition }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.overhead_tank_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.overhead_tank_condition.id_for_label }}" class="form-label">
+                                    حالة الخزان العلوي
+                                </label>
+                                {{ form.overhead_tank_condition }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.tank_accessories_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.tank_accessories_condition.id_for_label }}" class="form-label">
+                                    حالة مرافق الخزان
+                                </label>
+                                {{ form.tank_accessories_condition }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.appliances_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.appliances_condition.id_for_label }}" class="form-label">
+                                    الأجهزة الكهربائية
+                                </label>
+                                {{ form.appliances_condition }}
+                            </div>
+                            {% endif %}
+
+                            <!-- Kitchen specific -->
+                            {% if form.kitchen_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.kitchen_condition.id_for_label }}" class="form-label">
+                                    حالة المطبخ
+                                </label>
+                                {{ form.kitchen_condition }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Courtyard Section -->
+                {% if form.courtyard_area or form.courtyard_floor_type %}
+                <div class="form-section">
+                    <div class="section-header">
+                        <h6 class="mb-0">
+                            <i class="bx bx-landscape me-2"></i>
+                            تفاصيل الحوش
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% if form.courtyard_area %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.courtyard_area.id_for_label }}" class="form-label">
+                                    مساحة الحوش (م²)
+                                </label>
+                                {{ form.courtyard_area }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.courtyard_floor_type %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.courtyard_floor_type.id_for_label }}" class="form-label">
+                                    نوع الأرضيات
+                                </label>
+                                {{ form.courtyard_floor_type }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.courtyard_floor_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.courtyard_floor_condition.id_for_label }}" class="form-label">
+                                    حالة الأرضيات
+                                </label>
+                                {{ form.courtyard_floor_condition }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.courtyard_wall_condition %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.courtyard_wall_condition.id_for_label }}" class="form-label">
+                                    حالة الجدران
+                                </label>
+                                {{ form.courtyard_wall_condition }}
+                            </div>
+                            {% endif %}
+
+                            {% if form.exterior_paint %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.exterior_paint.id_for_label }}" class="form-label">
+                                    الدهان الخارجي
+                                </label>
+                                {{ form.exterior_paint }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Rooftop Section -->
+                {% if form.rooftop_area %}
+                <div class="form-section">
+                    <div class="section-header">
+                        <h6 class="mb-0">
+                            <i class="bx bx-building me-2"></i>
+                            تفاصيل السطح
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% if form.rooftop_area %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.rooftop_area.id_for_label }}" class="form-label">
+                                    مساحة السطح (م²)
+                                </label>
+                                {{ form.rooftop_area }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Notes Section -->
+                {% if form.notes %}
+                <div class="form-section">
+                    <div class="section-header">
+                        <h6 class="mb-0">
+                            <i class="bx bx-note me-2"></i>
+                            ملاحظات إضافية
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                    ملاحظات
+                                </label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.notes.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Form Actions -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'programs:room_detail' program.pk house.pk room_type room_number %}" class="btn btn-outline-secondary">
+                                <i class="bx bx-x me-1"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bx bx-check me-1"></i>
+                                {% if is_edit %}تحديث التفاصيل{% else %}حفظ التفاصيل{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    
+    // Form submission handling
+    form.addEventListener('submit', function(e) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bx bx-loader bx-spin me-1"></i>جاري الحفظ...';
+    });
+    
+    // Dynamic field dependencies
+    const roomType = '{{ room_type }}';
+    
+    // Show/hide fields based on conditions
+    if (roomType === 'bathroom') {
+        setupBathroomDependencies();
+    } else if (roomType === 'kitchen') {
+        setupKitchenDependencies();
+    }
+    
+    function setupBathroomDependencies() {
+        const groundTankField = document.getElementById('id_ground_tank');
+        const overheadTankField = document.getElementById('id_overhead_tank');
+        const groundTankConditionField = document.getElementById('id_ground_tank_condition');
+        const overheadTankConditionField = document.getElementById('id_overhead_tank_condition');
+        
+        if (groundTankField && groundTankConditionField) {
+            groundTankField.addEventListener('change', function() {
+                const conditionGroup = groundTankConditionField.closest('.mb-3');
+                if (this.value === 'no') {
+                    conditionGroup.style.display = 'none';
+                    groundTankConditionField.value = '';
+                } else {
+                    conditionGroup.style.display = 'block';
+                }
+            });
+            
+            // Trigger on page load
+            groundTankField.dispatchEvent(new Event('change'));
+        }
+        
+        if (overheadTankField && overheadTankConditionField) {
+            overheadTankField.addEventListener('change', function() {
+                const conditionGroup = overheadTankConditionField.closest('.mb-3');
+                if (this.value === 'no') {
+                    conditionGroup.style.display = 'none';
+                    overheadTankConditionField.value = '';
+                } else {
+                    conditionGroup.style.display = 'block';
+                }
+            });
+            
+            // Trigger on page load
+            overheadTankField.dispatchEvent(new Event('change'));
+        }
+    }
+    
+    function setupKitchenDependencies() {
+        // Add any kitchen-specific dependencies here
+    }
+    
+    // Add smooth animations to form sections
+    const formSections = document.querySelectorAll('.form-section');
+    formSections.forEach((section, index) => {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            section.style.transition = 'all 0.5s ease';
+            section.style.opacity = '1';
+            section.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+    
+    // Checkbox styling
+    const checkboxItems = document.querySelectorAll('.checkbox-item input[type="checkbox"]');
+    checkboxItems.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const item = this.closest('.checkbox-item');
+            if (this.checked) {
+                item.style.backgroundColor = '#f0f2ff';
+                item.style.borderColor = '#5a5fef';
+            } else {
+                item.style.backgroundColor = '';
+                item.style.borderColor = '#e3e6f0';
+            }
+        });
+        
+        // Trigger on page load for pre-checked items
+        if (checkbox.checked) {
+            checkbox.dispatchEvent(new Event('change'));
+        }
+    });
+    
+    // Form validation feedback
+    const requiredFields = form.querySelectorAll('[required]');
+    requiredFields.forEach(field => {
+        field.addEventListener('blur', function() {
+            if (!this.value) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+        
+        field.addEventListener('input', function() {
+            if (this.value && this.classList.contains('is-invalid')) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+    });
+    
+    // Auto-save draft functionality (optional)
+    let autoSaveTimeout;
+    const autoSaveKey = `room_draft_${roomType}_{{ room_number }}_{{ house.pk }}`;
+    
+    function autoSave() {
+        const formData = new FormData(form);
+        const draftData = {};
+        
+        for (let [key, value] of formData.entries()) {
+            if (key !== 'csrfmiddlewaretoken') {
+                draftData[key] = value;
+            }
+        }
+        
+        localStorage.setItem(autoSaveKey, JSON.stringify(draftData));
+        
+        // Show save indicator
+        const saveIndicator = document.createElement('div');
+        saveIndicator.className = 'position-fixed top-0 end-0 m-3 alert alert-info alert-dismissible fade show';
+        saveIndicator.style.zIndex = '9999';
+        saveIndicator.innerHTML = `
+            <i class="bx bx-save me-1"></i>
+            تم حفظ المسودة تلقائياً
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(saveIndicator);
+        
+        setTimeout(() => {
+            saveIndicator.remove();
+        }, 3000);
+    }
+    
+    // Load draft data
+    function loadDraft() {
+        const draftData = localStorage.getItem(autoSaveKey);
+        if (draftData) {
+            try {
+                const data = JSON.parse(draftData);
+                for (let [key, value] of Object.entries(data)) {
+                    const field = form.querySelector(`[name="${key}"]`);
+                    if (field) {
+                        if (field.type === 'checkbox') {
+                            field.checked = value === 'on';
+                        } else {
+                            field.value = value;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log('Could not load draft data');
+            }
+        }
+    }
+    
+    // Set up auto-save for form changes
+    form.addEventListener('input', function() {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(autoSave, 2000); // Save after 2 seconds of inactivity
+    });
+    
+    form.addEventListener('change', function() {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(autoSave, 1000); // Save after 1 second for select/checkbox changes
+    });
+    
+    // Clear draft on successful submission
+    form.addEventListener('submit', function() {
+        localStorage.removeItem(autoSaveKey);
+    });
+    
+    // Load draft data on page load
+    // loadDraft(); // Uncomment to enable draft loading
+});
+</script>
+{% endblock %}

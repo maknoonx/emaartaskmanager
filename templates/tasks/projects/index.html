@@ -1,0 +1,1175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - جمعية إعمار{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/projects.css' %}" />
+<style>
+/* Additional styles for clickable cards and action buttons */
+.project-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.project-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.project-actions {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    display: flex;
+    gap: 0.25rem;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.project-card:hover .project-actions {
+    opacity: 1;
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.action-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-edit-action {
+    background: linear-gradient(45deg, #FF9800, #f57c00);
+}
+
+.btn-delete-action {
+    background: linear-gradient(45deg, #f44336, #d32f2f);
+}
+
+.btn-print-action {
+    background: linear-gradient(45deg, #9C27B0, #7B1FA2);
+}
+
+/* Prevent event bubbling on action buttons */
+.project-actions {
+    pointer-events: none;
+}
+
+.action-btn {
+    pointer-events: all;
+}
+
+.project-card-content {
+    pointer-events: none;
+}
+
+.project-card-header,
+.project-card-body,
+.project-card-footer {
+    pointer-events: none;
+}
+
+/* Remove original dropdown actions styling */
+.project-card-footer {
+    padding: 1rem 1.5rem;
+    background: var(--gray-50);
+    border-top: 1px solid var(--gray-100);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Projects Management Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="card-title mb-0">
+                        <i class="bx bx-building me-2"></i>
+                        إدارة المشاريع
+                    </h4>
+                    <p class="text-muted mb-0">إدارة وتتبع مشاريع الجمعية</p>
+                </div>
+                <button type="button" class="btn btn-primary" id="addProjectBtn">
+                    <i class="bx bx-plus me-1"></i>
+                    إضافة مشروع جديد
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 col-sm-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar flex-shrink-0 me-3">
+                        <span class="avatar-initial rounded bg-label-primary">
+                            <i class="bx bx-building"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">{{ total_projects }}</h5>
+                        <small class="text-muted">إجمالي المشاريع</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 col-sm-6 mb-4">
+        <div class="card stats-card new-projects">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar flex-shrink-0 me-3">
+                        <span class="avatar-initial rounded bg-label-info">
+                            <i class="bx bx-plus-circle"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">{{ new_projects }}</h5>
+                        <small class="text-muted">مشاريع جديدة</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 col-sm-6 mb-4">
+        <div class="card stats-card in-progress-projects">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar flex-shrink-0 me-3">
+                        <span class="avatar-initial rounded bg-label-warning">
+                            <i class="bx bx-time"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">{{ in_progress_projects }}</h5>
+                        <small class="text-muted">قيد التنفيذ</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 col-sm-6 mb-4">
+        <div class="card stats-card finished-projects">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar flex-shrink-0 me-3">
+                        <span class="avatar-initial rounded bg-label-success">
+                            <i class="bx bx-check-circle"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">{{ finished_projects }}</h5>
+                        <small class="text-muted">مشاريع مكتملة</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overdue Projects Alert -->
+{% if overdue_projects > 0 %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-warning d-flex align-items-center">
+            <i class="bx bx-error-circle me-2"></i>
+            <div>
+                <strong>تنبيه:</strong> يوجد {{ overdue_projects }} مشروع متأخر عن الموعد المحدد.
+                <a href="?overdue=true" class="alert-link">عرض المشاريع المتأخرة</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Search and Filter Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card filter-section">
+            <div class="card-body">
+                <form method="GET" class="row g-3" id="filterForm">
+                    <div class="col-md-3">
+                        <label class="form-label">البحث</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="search" 
+                                   value="{{ search_query }}" 
+                                   placeholder="ابحث في المشاريع...">
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="bx bx-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">الحالة</label>
+                        <select class="form-select" name="status">
+                            <option value="">جميع الحالات</option>
+                            {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">الموظف المُعيّن</label>
+                        <select class="form-select" name="employee">
+                            <option value="">جميع الموظفين</option>
+                            {% for employee in employees %}
+                            <option value="{{ employee.pk }}" {% if employee_filter == employee.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ employee.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">المتأخرة</label>
+                        <select class="form-select" name="overdue">
+                            <option value="">الكل</option>
+                            <option value="true" {% if overdue_filter == 'true' %}selected{% endif %}>
+                                المتأخرة فقط
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">تطبيق</button>
+                        <a href="{% url 'tasks:projects' %}" class="btn btn-outline-secondary">إعادة تعيين</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Projects Grid -->
+<div class="row">
+    <div class="col-12">
+        {% if page_obj %}
+        <div class="projects-grid">
+            {% for project in page_obj %}
+            <div class="project-card status-{{ project.status }}{% if project.is_overdue %} overdue{% endif %} animate-fade-in" data-project-id="{{ project.pk }}">
+                <!-- Action buttons (show on hover) -->
+                <div class="project-actions">
+                    <button type="button" class="action-btn btn-edit-action" 
+                            title="تعديل" onclick="event.stopPropagation(); ProjectManager.showEditForm({{ project.pk }})">
+                        <i class="bx bx-edit"></i>
+                    </button>
+                    <button type="button" class="action-btn btn-print-action" 
+                            title="طباعة" onclick="event.stopPropagation(); ProjectManager.printProject({{ project.pk }})">
+                        <i class="bx bx-printer"></i>
+                    </button>
+                    <button type="button" class="action-btn btn-delete-action" 
+                            title="حذف" onclick="event.stopPropagation(); ProjectManager.showDeleteConfirm({{ project.pk }}, '{{ project.name }}', {{ project.can_be_deleted|yesno:'true,false' }})">
+                        <i class="bx bx-trash"></i>
+                    </button>
+                </div>
+                
+                <div class="project-card-content">
+                    <div class="project-card-header">
+                        <h5 class="project-card-title">{{ project.name }}</h5>
+                        <div class="project-card-meta">
+                            <span class="project-status-badge status-{{ project.status }}">
+                                {{ project.get_status_display_arabic }}
+                            </span>
+                            {% if project.due_date %}
+                            <span class="due-date-indicator {% if project.is_overdue %}overdue{% elif project.days_remaining <= 7 %}due-soon{% else %}normal{% endif %}">
+                                <i class="bx bx-calendar"></i>
+                                {% if project.is_overdue %}
+                                متأخر {{ project.days_remaining|add:"-1" }} يوم
+                                {% elif project.days_remaining == 0 %}
+                                ينتهي اليوم
+                                {% elif project.days_remaining == 1 %}
+                                ينتهي غداً
+                                {% else %}
+                                {{ project.days_remaining }} يوم متبقي
+                                {% endif %}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="project-card-body">
+                        {% if project.description %}
+                        <p class="project-description">{{ project.description }}</p>
+                        {% endif %}
+                        
+                        <div class="project-info-grid">
+                            <div class="project-info-item team-info">
+                                <span class="project-info-label">فريق العمل</span>
+                                <div class="project-info-value">
+                                    {% if project.assigned_employees.exists %}
+                                    <div class="assigned-team">
+                                        {% if project.assigned_employees_count == 1 %}
+                                        <!-- Single employee display -->
+                                        {% with project.assigned_employees.first as employee %}
+                                        <div class="single-employee">
+                                            <div class="avatar avatar-sm">
+                                                {% if employee.profile_picture %}
+                                                <img src="{{ employee.profile_picture.url }}" alt="{{ employee.name }}" class="rounded-circle">
+                                                {% else %}
+                                                <span class="avatar-initial rounded-circle bg-label-primary">
+                                                    {{ employee.name|first|upper }}
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                            <span class="employee-name">{{ employee.name }}</span>
+                                        </div>
+                                        {% endwith %}
+                                        {% elif project.assigned_employees_count <= 3 %}
+                                        <!-- Multiple employees (up to 3) display -->
+                                        <div class="multiple-employees">
+                                            {% for employee in project.assigned_employees.all|slice:":3" %}
+                                            <div class="team-member {% if employee == project.primary_assigned_employee %}primary{% endif %}">
+                                                <div class="avatar avatar-xs">
+                                                    {% if employee.profile_picture %}
+                                                    <img src="{{ employee.profile_picture.url }}" alt="{{ employee.name }}" class="rounded-circle">
+                                                    {% else %}
+                                                    <span class="avatar-initial rounded-circle bg-label-primary">
+                                                        {{ employee.name|first|upper }}
+                                                    </span>
+                                                    {% endif %}
+                                                </div>
+                                                {% if employee == project.primary_assigned_employee %}
+                                                <i class="bx bx-crown team-leader-icon" title="قائد الفريق"></i>
+                                                {% endif %}
+                                            </div>
+                                            {% endfor %}
+                                            <div class="team-names">
+                                                {% if project.primary_assigned_employee %}
+                                                <span class="primary-name">{{ project.primary_assigned_employee.name }}</span>
+                                                {% if project.assigned_employees_count > 1 %}
+                                                <small class="text-muted">و {{ project.assigned_employees_count|add:"-1" }} آخرين</small>
+                                                {% endif %}
+                                                {% else %}
+                                                <span class="team-count">{{ project.assigned_employees_count }} أعضاء</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <!-- Many employees display -->
+                                        <div class="large-team">
+                                            <div class="team-avatars">
+                                                {% for employee in project.assigned_employees.all|slice:":2" %}
+                                                <div class="avatar avatar-xs overlap">
+                                                    {% if employee.profile_picture %}
+                                                    <img src="{{ employee.profile_picture.url }}" alt="{{ employee.name }}" class="rounded-circle">
+                                                    {% else %}
+                                                    <span class="avatar-initial rounded-circle bg-label-primary">
+                                                        {{ employee.name|first|upper }}
+                                                    </span>
+                                                    {% endif %}
+                                                </div>
+                                                {% endfor %}
+                                                <div class="avatar avatar-xs overlap more-count">
+                                                    <span class="avatar-initial rounded-circle bg-label-secondary">
+                                                        +{{ project.assigned_employees_count|add:"-2" }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="team-info">
+                                                {% if project.primary_assigned_employee %}
+                                                <span class="primary-name">{{ project.primary_assigned_employee.name }}</span>
+                                                <small class="text-muted">يقود فريق من {{ project.assigned_employees_count }} أعضاء</small>
+                                                {% else %}
+                                                <span class="team-count">فريق من {{ project.assigned_employees_count }} أعضاء</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% else %}
+                                    <span class="no-assigned-team">لا يوجد فريق مُعيّن</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="project-info-item">
+                                <span class="project-info-label">تاريخ الإنشاء</span>
+                                <span class="project-info-value">{{ project.created_at|date:"d/m/Y" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="project-card-footer">
+                        <div class="project-progress">
+                            <div class="project-progress-label">
+                                <span>التقدم</span>
+                                <span>{{ project.progress_percentage }}%</span>
+                            </div>
+                            <div class="project-progress-bar">
+                                <div class="project-progress-fill status-{{ project.status }}" 
+                                     style="width: {{ project.progress_percentage }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="d-flex justify-content-center mt-4">
+            <nav aria-label="Project pagination">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if employee_filter %}&employee={{ employee_filter }}{% endif %}{% if overdue_filter %}&overdue={{ overdue_filter }}{% endif %}">
+                                <i class="bx bx-chevron-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if employee_filter %}&employee={{ employee_filter }}{% endif %}{% if overdue_filter %}&overdue={{ overdue_filter }}{% endif %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if employee_filter %}&employee={{ employee_filter }}{% endif %}{% if overdue_filter %}&overdue={{ overdue_filter }}{% endif %}">
+                                <i class="bx bx-chevron-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div class="empty-state">
+            <div class="avatar avatar-xl mx-auto mb-3">
+                <span class="avatar-initial rounded bg-label-secondary">
+                    <i class="bx bx-building bx-lg"></i>
+                </span>
+            </div>
+            <h5 class="mb-2">لا توجد مشاريع</h5>
+            <p class="text-muted mb-4">لم يتم العثور على أي مشاريع بناءً على معايير البحث المحددة</p>
+            <button type="button" class="btn btn-primary" id="addFirstProjectBtn">
+                <i class="bx bx-plus me-1"></i>
+                إضافة أول مشروع
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Project Form Modal -->
+<div class="modal fade" id="projectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <!-- Modal content will be loaded here via AJAX -->
+        </div>
+    </div>
+</div>
+
+<!-- Project Detail Modal -->
+<div class="modal fade" id="projectDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <!-- Modal content will be loaded here via AJAX -->
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <div class="avatar avatar-xl mx-auto mb-3">
+                        <span class="avatar-initial rounded bg-label-danger">
+                            <i class="bx bx-trash bx-lg"></i>
+                        </span>
+                    </div>
+                    <h5 class="mb-2">هل أنت متأكد؟</h5>
+                    <p class="text-muted mb-4" id="deleteConfirmText">
+                        هل تريد حذف المشروع؟ لن يمكن التراجع عن هذا الإجراء.
+                    </p>
+                    <div class="alert alert-danger d-none" id="deleteBlockersAlert">
+                        <h6 class="alert-heading">لا يمكن حذف المشروع!</h6>
+                        <p class="mb-0" id="deleteBlockersText"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Updated JavaScript for projects with print functionality
+const ProjectManager = {
+    config: {
+        toastDuration: 3000,
+        confirmationTimeout: 5000,
+        apiHeaders: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    },
+
+    init() {
+        this.bindEvents();
+        this.initializeTooltips();
+        this.setupCSRFToken();
+    },
+
+    bindEvents() {
+        $(document).on('submit', '#projectForm', this.handleFormSubmit.bind(this));
+        $('#projectModal, #projectDetailModal').on('hidden.bs.modal', this.cleanupModal.bind(this));
+        $('#confirmDeleteBtn').on('click', this.confirmDelete.bind(this));
+        $('#filterForm input[name="search"]').on('keyup', this.debounce(this.autoSearch.bind(this), 500));
+        $(document).on('keydown', this.handleKeyboardShortcuts.bind(this));
+        
+        // Make project cards clickable
+        $(document).on('click', '.project-card', function(e) {
+            // Don't trigger if clicking on action buttons
+            if ($(e.target).closest('.project-actions').length) {
+                return;
+            }
+            
+            const projectId = $(this).data('project-id');
+            if (projectId) {
+                ProjectManager.showDetail(projectId);
+            }
+        });
+    },
+
+    setupCSRFToken() {
+        const csrfToken = $('[name=csrfmiddlewaretoken]').val() || 
+                         $('meta[name=csrf-token]').attr('content') ||
+                         document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        if (csrfToken) {
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    if (!this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                    }
+                }
+            });
+        }
+    },
+
+    initializeTooltips() {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+    },
+
+    showAddForm() {
+        this.loadModal('/tasks/projects/create/', '#projectModal', 'إضافة مشروع جديد');
+    },
+
+    showEditForm(projectId) {
+        this.loadModal(`/tasks/projects/${projectId}/edit/`, '#projectModal', 'تعديل المشروع');
+    },
+
+    showDetail(projectId) {
+        this.loadModal(`/tasks/projects/${projectId}/`, '#projectDetailModal', 'تفاصيل المشروع');
+    },
+
+    printProject(projectId) {
+        // Create a new window for printing
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        
+        // Show loading in the new window
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>طباعة المشروع</title>
+                    <style>
+                        body { 
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                            direction: rtl; 
+                            text-align: right;
+                            padding: 20px;
+                        }
+                        .loading { 
+                            text-align: center; 
+                            padding: 50px; 
+                            color: #666;
+                        }
+                        @media print {
+                            body { margin: 0; }
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="loading">
+                        <h3>جاري تحميل بيانات المشروع...</h3>
+                        <p>يرجى الانتظار</p>
+                    </div>
+                </body>
+            </html>
+        `);
+        
+        // Fetch project details and prepare for printing
+        $.ajax({
+            url: `/tasks/projects/${projectId}/`,
+            method: 'GET',
+            headers: this.config.apiHeaders,
+            success: function(response) {
+                // Extract project data from the response
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(response, 'text/html');
+                
+                // Create print-friendly content
+                const printContent = this.generatePrintContent(doc, projectId);
+                
+                // Replace the loading content
+                printWindow.document.body.innerHTML = printContent;
+                
+                // Add print styles
+                const printStyles = `
+                    <style>
+                        body {
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            direction: rtl;
+                            text-align: right;
+                            margin: 0;
+                            padding: 20px;
+                            color: #333;
+                            line-height: 1.6;
+                        }
+                        .print-header {
+                            border-bottom: 3px solid #007AFF;
+                            padding-bottom: 20px;
+                            margin-bottom: 30px;
+                        }
+                        .print-title {
+                            color: #007AFF;
+                            font-size: 24px;
+                            font-weight: bold;
+                            margin-bottom: 10px;
+                        }
+                        .print-subtitle {
+                            color: #666;
+                            font-size: 14px;
+                            margin-bottom: 5px;
+                        }
+                        .print-date {
+                            color: #999;
+                            font-size: 12px;
+                        }
+                        .section {
+                            margin-bottom: 25px;
+                            page-break-inside: avoid;
+                        }
+                        .section-title {
+                            color: #007AFF;
+                            font-size: 16px;
+                            font-weight: bold;
+                            border-bottom: 1px solid #ddd;
+                            padding-bottom: 5px;
+                            margin-bottom: 15px;
+                        }
+                        .info-grid {
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 20px;
+                            margin-bottom: 20px;
+                        }
+                        .info-item {
+                            border: 1px solid #eee;
+                            padding: 15px;
+                            border-radius: 8px;
+                        }
+                        .info-label {
+                            font-weight: bold;
+                            color: #333;
+                            margin-bottom: 5px;
+                        }
+                        .info-value {
+                            color: #666;
+                        }
+                        .status-badge {
+                            display: inline-block;
+                            padding: 4px 12px;
+                            border-radius: 20px;
+                            font-size: 12px;
+                            font-weight: bold;
+                            border: 1px solid;
+                        }
+                        .progress-bar {
+                            width: 100%;
+                            height: 20px;
+                            border: 1px solid #ddd;
+                            border-radius: 10px;
+                            overflow: hidden;
+                            margin-top: 10px;
+                        }
+                        .progress-fill {
+                            height: 100%;
+                            background: #007AFF;
+                        }
+                        .team-list {
+                            list-style: none;
+                            padding: 0;
+                        }
+                        .team-member {
+                            padding: 5px 0;
+                            border-bottom: 1px solid #eee;
+                        }
+                        @media print {
+                            body { 
+                                margin: 0; 
+                                font-size: 12px;
+                            }
+                            .no-print { 
+                                display: none; 
+                            }
+                            .section {
+                                page-break-inside: avoid;
+                            }
+                        }
+                    </style>
+                `;
+                printWindow.document.head.innerHTML += printStyles;
+                
+                // Auto print after a short delay
+                setTimeout(() => {
+                    printWindow.print();
+                }, 500);
+                
+                this.showToast('success', 'تم تحضير المشروع للطباعة');
+            }.bind(this),
+            error: function() {
+                printWindow.close();
+                this.showToast('error', 'فشل في تحميل بيانات المشروع للطباعة');
+            }.bind(this)
+        });
+    },
+
+    generatePrintContent(doc, projectId) {
+        // Extract project information from the modal content
+        const title = doc.querySelector('.modal-title')?.textContent || 'تفاصيل المشروع';
+        const currentDate = new Date().toLocaleDateString('ar-SA');
+        
+        return `
+            <div class="print-header">
+                <div class="print-title">جمعية إعمار - تقرير المشروع</div>
+                <div class="print-subtitle">${title}</div>
+                <div class="print-date">تاريخ الطباعة: ${currentDate}</div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">معلومات أساسية</div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">رقم المشروع</div>
+                        <div class="info-value">#${projectId}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">تاريخ الطباعة</div>
+                        <div class="info-value">${currentDate}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section no-print">
+                <button onclick="window.print()" style="background: #007AFF; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-left: 10px;">
+                    طباعة
+                </button>
+                <button onclick="window.close()" style="background: #666; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                    إغلاق
+                </button>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">ملاحظة</div>
+                <p>تم إنشاء هذا التقرير تلقائياً من نظام إدارة جمعية إعمار. لمزيد من التفاصيل، يرجى مراجعة النظام مباشرة.</p>
+            </div>
+        `;
+    },
+
+    loadModal(url, modalSelector, title) {
+        const modal = $(modalSelector);
+        const modalContent = modal.find('.modal-content');
+        
+        modalContent.html(this.getLoadingHTML(title));
+        modal.modal('show');
+        
+        $.ajax({
+            url: url,
+            method: 'GET',
+            headers: this.config.apiHeaders,
+            success: function(response) {
+                modalContent.html(response);
+                this.initializeModalComponents();
+            }.bind(this),
+            error: function(xhr, status, error) {
+                modalContent.html(this.getErrorHTML('حدث خطأ أثناء تحميل البيانات'));
+                this.showToast('error', 'فشل تحميل البيانات');
+            }.bind(this)
+        });
+    },
+
+    handleFormSubmit(e) {
+        e.preventDefault();
+        
+        const form = $(e.target);
+        const submitBtn = form.find('button[type="submit"]');
+        const btnText = submitBtn.find('.btn-text');
+        const spinner = submitBtn.find('.spinner-border');
+        
+        if (!this.validateForm(form)) {
+            return;
+        }
+        
+        this.setLoadingState(submitBtn, btnText, spinner, true);
+        
+        $.ajax({
+            url: form.attr('action'),
+            method: 'POST',
+            data: form.serialize(),
+            headers: this.config.apiHeaders,
+            success: function(response) {
+                if (response.success) {
+                    this.showToast('success', response.message);
+                    this.closeModal();
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    this.showFormErrors(response.error || response.errors);
+                }
+            }.bind(this),
+            error: function(xhr) {
+                const errorMessage = this.parseErrorResponse(xhr);
+                this.showFormErrors(errorMessage);
+            }.bind(this),
+            complete: function() {
+                this.setLoadingState(submitBtn, btnText, spinner, false);
+            }.bind(this)
+        });
+    },
+
+    validateForm(form) {
+        let isValid = true;
+        const errors = [];
+        
+        form.find('[required]').each(function() {
+            const field = $(this);
+            const value = field.val().trim();
+            
+            if (!value) {
+                const label = field.closest('.mb-3').find('label').text().replace(' *', '');
+                errors.push(`الحقل "${label}" مطلوب`);
+                field.addClass('is-invalid');
+                isValid = false;
+            } else {
+                field.removeClass('is-invalid');
+            }
+        });
+        
+        const dueDateField = form.find('input[name="due_date"]');
+        if (dueDateField.length && dueDateField.val()) {
+            const dueDate = new Date(dueDateField.val());
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (dueDate < today) {
+                errors.push('تاريخ الانتهاء يجب أن يكون في المستقبل');
+                dueDateField.addClass('is-invalid');
+                isValid = false;
+            }
+        }
+        
+        if (!isValid) {
+            this.showFormErrors(errors);
+        }
+        
+        return isValid;
+    },
+
+    showFormErrors(errors) {
+        const errorAlert = $('#formErrorAlert');
+        const errorList = $('#formErrorList');
+        
+        if (typeof errors === 'string') {
+            errors = [errors];
+        }
+        
+        if (errors && errors.length > 0) {
+            const errorItems = errors.map(error => `<li>${error}</li>`).join('');
+            errorList.html(errorItems);
+            errorAlert.removeClass('d-none');
+            
+            errorAlert[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    },
+
+    showDeleteConfirm(projectId, projectName, canDelete) {
+        const modal = $('#deleteConfirmModal');
+        const confirmBtn = $('#confirmDeleteBtn');
+        const confirmText = $('#deleteConfirmText');
+        const blockersAlert = $('#deleteBlockersAlert');
+        const blockersText = $('#deleteBlockersText');
+        
+        confirmBtn.data('project-id', projectId);
+        confirmText.text(`هل تريد حذف المشروع "${projectName}"؟ لن يمكن التراجع عن هذا الإجراء.`);
+        
+        if (canDelete === false || canDelete === 'false') {
+            confirmBtn.hide();
+            blockersAlert.removeClass('d-none');
+            blockersText.text('المشروع مرتبط ببيانات أخرى في النظام ولا يمكن حذفه.');
+        } else {
+            confirmBtn.show();
+            blockersAlert.addClass('d-none');
+        }
+        
+        modal.modal('show');
+    },
+
+    confirmDelete() {
+        const btn = $('#confirmDeleteBtn');
+        const projectId = btn.data('project-id');
+        
+        if (!projectId) return;
+        
+        const originalText = btn.html();
+        btn.html('<span class="spinner-border spinner-border-sm me-1"></span>جاري الحذف...');
+        btn.prop('disabled', true);
+        
+        $.ajax({
+            url: `/tasks/projects/${projectId}/delete/`,
+            method: 'POST',
+            headers: this.config.apiHeaders,
+            success: function(response) {
+                if (response.success) {
+                    this.showToast('success', response.message);
+                    $('#deleteConfirmModal').modal('hide');
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    this.showToast('error', response.error || 'حدث خطأ أثناء الحذف');
+                }
+            }.bind(this),
+            error: function() {
+                this.showToast('error', 'حدث خطأ أثناء حذف المشروع');
+            }.bind(this),
+            complete: function() {
+                btn.html(originalText);
+                btn.prop('disabled', false);
+            }
+        });
+    },
+
+    autoSearch() {
+        $('#filterForm').submit();
+    },
+
+    handleKeyboardShortcuts(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault();
+            this.showAddForm();
+        }
+        
+        if (e.key === 'Escape') {
+            $('.modal.show').modal('hide');
+        }
+    },
+
+    setLoadingState(btn, btnText, spinner, isLoading) {
+        if (isLoading) {
+            btn.prop('disabled', true);
+            if (btnText.length) btnText.addClass('d-none');
+            if (spinner.length) spinner.removeClass('d-none');
+        } else {
+            btn.prop('disabled', false);
+            if (btnText.length) btnText.removeClass('d-none');
+            if (spinner.length) spinner.addClass('d-none');
+        }
+    },
+
+    closeModal() {
+        $('.modal.show').modal('hide');
+    },
+
+    cleanupModal() {
+        $('#formErrorAlert').addClass('d-none');
+        $('.is-invalid').removeClass('is-invalid');
+        $('#projectForm')[0]?.reset();
+        
+        setTimeout(() => {
+            $('.modal-content').empty();
+        }, 300);
+    },
+
+    initializeModalComponents() {
+        this.initializeTooltips();
+        
+        setTimeout(() => {
+            $('.modal.show').find('input:first').focus();
+        }, 100);
+    },
+
+    showToast(type, message) {
+        $('.toast-container').remove();
+        
+        const toastClass = type === 'success' ? 'bg-success' : 'bg-danger';
+        const iconClass = type === 'success' ? 'bx-check' : 'bx-x';
+        
+        const toastHTML = `
+            <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+                <div class="toast show ${toastClass} text-white" role="alert">
+                    <div class="toast-header ${toastClass} text-white border-0">
+                        <i class="bx ${iconClass} me-2"></i>
+                        <strong class="me-auto">${type === 'success' ? 'نجح' : 'خطأ'}</strong>
+                        <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('body').append(toastHTML);
+        
+        setTimeout(() => {
+            $('.toast-container').fadeOut(300, function() {
+                $(this).remove();
+            });
+        }, this.config.toastDuration);
+    },
+
+    getLoadingHTML(title) {
+        return `
+            <div class="modal-header">
+                <h5 class="modal-title">${title}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">جاري التحميل...</span>
+                </div>
+                <p class="text-muted">جاري تحميل البيانات...</p>
+            </div>
+        `;
+    },
+
+    getErrorHTML(message) {
+        return `
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">خطأ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <div class="avatar avatar-xl mx-auto mb-3">
+                    <span class="avatar-initial rounded bg-label-danger">
+                        <i class="bx bx-error bx-lg"></i>
+                    </span>
+                </div>
+                <h6 class="mb-2">حدث خطأ</h6>
+                <p class="text-muted mb-4">${message}</p>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        `;
+    },
+
+    parseErrorResponse(xhr) {
+        let errorMessage = 'حدث خطأ غير متوقع';
+        
+        if (xhr.responseJSON) {
+            if (xhr.responseJSON.error) {
+                errorMessage = xhr.responseJSON.error;
+            } else if (xhr.responseJSON.errors) {
+                if (Array.isArray(xhr.responseJSON.errors)) {
+                    errorMessage = xhr.responseJSON.errors.join(', ');
+                } else {
+                    errorMessage = Object.values(xhr.responseJSON.errors).join(', ');
+                }
+            }
+        } else if (xhr.status === 400) {
+            errorMessage = 'البيانات المدخلة غير صحيحة';
+        } else if (xhr.status === 403) {
+            errorMessage = 'ليس لديك صلاحية لتنفيذ هذا الإجراء';
+        } else if (xhr.status === 404) {
+            errorMessage = 'المشروع المطلوب غير موجود';
+        } else if (xhr.status === 500) {
+            errorMessage = 'خطأ في الخادم، يرجى المحاولة لاحقاً';
+        }
+        
+        return errorMessage;
+    },
+
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+};
+
+// Initialize when document is ready
+$(document).ready(function() {
+    ProjectManager.init();
+    
+    $('#filterForm select').on('change', function() {
+        $('#filterForm').submit();
+    });
+    
+    $('#addProjectBtn, #addFirstProjectBtn').on('click', function() {
+        ProjectManager.showAddForm();
+    });
+    
+    window.addEventListener('popstate', function(e) {
+        if ($('.modal.show').length > 0) {
+            $('.modal.show').modal('hide');
+        }
+    });
+    
+    if (window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.href);
+    }
+});
+
+window.ProjectManager = ProjectManager;
+</script>
+{% endblock %}
