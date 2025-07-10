@@ -583,17 +583,30 @@ const TaskManager = {
     },
 
     init() {
+        console.log('TaskManager initializing...');
         this.setupCSRFToken();
         this.bindEvents();
+        console.log('TaskManager initialized successfully');
     },
 
     bindEvents() {
-        $(document).on('submit', '#taskForm', this.handleFormSubmit.bind(this));
-        $('#taskModal, #taskDetailModal').on('hidden.bs.modal', this.cleanupModal.bind(this));
-        $('#confirmDeleteBtn').on('click', this.confirmDelete.bind(this));
-        $('#filterForm select').on('change', function() { $('#filterForm').submit(); });
+        console.log('Binding events...');
         
-        // Make task cards clickable
+        // Form submission handler
+        $(document).on('submit', '#taskForm', this.handleFormSubmit.bind(this));
+        
+        // Modal cleanup
+        $('#taskModal, #taskDetailModal').on('hidden.bs.modal', this.cleanupModal.bind(this));
+        
+        // Delete confirmation
+        $('#confirmDeleteBtn').on('click', this.confirmDelete.bind(this));
+        
+        // Filter form auto-submit
+        $('#filterForm select').on('change', function() { 
+            $('#filterForm').submit(); 
+        });
+        
+        // Task card click handler
         $(document).on('click', '.task-card', function(e) {
             // Don't trigger if clicking on action buttons
             if ($(e.target).closest('.task-actions').length) {
@@ -605,11 +618,14 @@ const TaskManager = {
                 TaskManager.showDetail(taskId);
             }
         });
+        
+        console.log('Events bound successfully');
     },
 
     setupCSRFToken() {
         let csrfToken = null;
         
+        // Try to get CSRF token from various sources
         const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
         if (csrfInput) {
             csrfToken = csrfInput.value;
@@ -667,17 +683,17 @@ const TaskManager = {
     },
 
     showAddForm() {
-        console.log('Calling showAddForm - URL: /tasks/tasks/create/');
+        console.log('showAddForm called - URL: /tasks/tasks/create/');
         this.loadModal('/tasks/tasks/create/', '#taskModal', 'إضافة مهمة جديدة');
     },
 
     showEditForm(taskId) {
-        console.log('Calling showEditForm for task:', taskId);
+        console.log('showEditForm called for task:', taskId);
         this.loadModal(`/tasks/tasks/${taskId}/edit/`, '#taskModal', 'تعديل المهمة');
     },
 
     showDetail(taskId) {
-        console.log('Calling showDetail for task:', taskId);
+        console.log('showDetail called for task:', taskId);
         this.loadModal(`/tasks/tasks/${taskId}/`, '#taskDetailModal', 'تفاصيل المهمة');
     },
 
@@ -758,72 +774,72 @@ const TaskManager = {
     },
 
     toggleTaskStatus(taskId) {
-    if (!confirm('هل تريد تغيير حالة المهمة؟')) return;
-    
-    // Get CSRF token from multiple sources
-    function getCsrfToken() {
-        // Try cookie first
-        const cookies = document.cookie.split(';');
-        for (let cookie of cookies) {
-            const [name, value] = cookie.trim().split('=');
-            if (name === 'csrftoken') {
-                return decodeURIComponent(value);
+        if (!confirm('هل تريد تغيير حالة المهمة؟')) return;
+        
+        // Get CSRF token from multiple sources
+        function getCsrfToken() {
+            // Try cookie first
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'csrftoken') {
+                    return decodeURIComponent(value);
+                }
             }
+            
+            // Try meta tag
+            const csrfMeta = document.querySelector('meta[name=csrf-token]');
+            if (csrfMeta) {
+                return csrfMeta.getAttribute('content');
+            }
+            
+            // Try form input
+            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (csrfInput) {
+                return csrfInput.value;
+            }
+            
+            return null;
         }
         
-        // Try meta tag
-        const csrfMeta = document.querySelector('meta[name=csrf-token]');
-        if (csrfMeta) {
-            return csrfMeta.getAttribute('content');
+        const csrfToken = getCsrfToken();
+        
+        if (!csrfToken) {
+            console.error('CSRF token not found');
+            this.showToast('error', 'خطأ في التحقق من الأمان');
+            return;
         }
         
-        // Try form input
-        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
-        if (csrfInput) {
-            return csrfInput.value;
-        }
+        console.log('Using CSRF token:', csrfToken);
         
-        return null;
-    }
-    
-    const csrfToken = getCsrfToken();
-    
-    if (!csrfToken) {
-        console.error('CSRF token not found');
-        this.showToast('error', 'خطأ في التحقق من الأمان');
-        return;
-    }
-    
-    console.log('Using CSRF token:', csrfToken);
-    
-    $.ajax({
-        url: `/tasks/tasks/${taskId}/toggle-status/`,
-        method: 'POST',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRFToken': csrfToken
-        },
-        data: {
-            'csrfmiddlewaretoken': csrfToken
-        },
-        success: function(response) {
-            if (response.success) {
-                this.showToast('success', response.message);
-                setTimeout(() => window.location.reload(), 1000);
-            } else {
-                this.showToast('error', response.error || 'حدث خطأ أثناء تحديث الحالة');
-            }
-        }.bind(this),
-        error: function(xhr, status, error) {
-            console.error('Toggle status error:', xhr.status, error);
-            if (xhr.status === 403) {
-                this.showToast('error', 'خطأ في التحقق من الصلاحيات - يرجى إعادة تحميل الصفحة');
-            } else {
-                this.showToast('error', 'حدث خطأ أثناء تحديث حالة المهمة');
-            }
-        }.bind(this)
-    });
-
+        $.ajax({
+            url: `/tasks/tasks/${taskId}/toggle-status/`,
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            },
+            data: {
+                'csrfmiddlewaretoken': csrfToken
+            },
+            success: function(response) {
+                if (response.success) {
+                    this.showToast('success', response.message);
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    this.showToast('error', response.error || 'حدث خطأ أثناء تحديث الحالة');
+                }
+            }.bind(this),
+            error: function(xhr, status, error) {
+                console.error('Toggle status error:', xhr.status, error);
+                if (xhr.status === 403) {
+                    this.showToast('error', 'خطأ في التحقق من الصلاحيات - يرجى إعادة تحميل الصفحة');
+                } else {
+                    this.showToast('error', 'حدث خطأ أثناء تحديث حالة المهمة');
+                }
+            }.bind(this)
+        });
+    },
 
     showDeleteConfirm(taskId, taskName) {
         const modal = $('#deleteConfirmModal');
@@ -1000,15 +1016,36 @@ const TaskManager = {
 $(document).ready(function() {
     console.log('Document ready, initializing TaskManager');
     
+    // Initialize TaskManager
     TaskManager.init();
     
+    // Bind Add Task button click event with multiple fallbacks
     $('#addTaskBtn').off('click').on('click', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         console.log('Add Task button clicked - calling showAddForm()');
         TaskManager.showAddForm();
     });
+    
+    // Additional fallback for button click
+    $(document).on('click', '#addTaskBtn', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Add Task button clicked (delegated) - calling showAddForm()');
+        TaskManager.showAddForm();
+    });
+    
+    console.log('Add Task button event bound successfully');
+    
+    // Test button existence
+    if ($('#addTaskBtn').length > 0) {
+        console.log('Add Task button found in DOM');
+    } else {
+        console.error('Add Task button NOT found in DOM');
+    }
 });
 
+// Make TaskManager globally available
 window.TaskManager = TaskManager;
 </script>
 {% endblock %}
