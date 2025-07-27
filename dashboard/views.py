@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from tasks.models import Task, MonthlyGoal
 
 
+# ===== تحديث Dashboard View =====
 @login_required
 def dashboard_view(request):
     """Main dashboard view with notifications and task management"""
@@ -22,51 +23,12 @@ def dashboard_view(request):
         greeting_message = "مساء الخير! وقت لمراجعة إنجازات اليوم"
     
     # ===== NOTIFICATIONS SECTION =====
-    notifications = []
-    
-    # Get recent tasks assigned to me (within last 7 days)
-    recent_assigned_tasks = Task.objects.filter(
-        assigned_to=user,
-        created_at__gte=timezone.now() - timedelta(days=7),
-        status='new'
-    ).select_related('created_by', 'project').order_by('-created_at')[:5]
-    
-    for task in recent_assigned_tasks:
-        notifications.append({
-            'type': 'new-task',
-            'task_name': task.name,
-            'from_user': task.created_by,
-            'created_at': task.created_at,
-            'task_id': task.pk
-        })
-    
-    # Get recently completed tasks that I assigned to others (within last 3 days)
-    completed_assigned_tasks = Task.objects.filter(
-        created_by=user,
-        assigned_to__isnull=False,
-        status='finished',
-        updated_at__gte=timezone.now() - timedelta(days=3)
-    ).exclude(assigned_to=user).select_related('assigned_to', 'project').order_by('-updated_at')[:5]
-    
-    for task in completed_assigned_tasks:
-        notifications.append({
-            'type': 'completed-task',
-            'task_name': task.name,
-            'from_user': task.assigned_to,  # Who completed it
-            'created_at': task.updated_at,
-            'task_id': task.pk
-        })
-    
-    # Sort notifications by creation time (newest first)
-    notifications = sorted(notifications, key=lambda x: x['created_at'], reverse=True)[:10]
-    notifications_count = len(notifications)
+    # (الإشعارات تبقى كما هي...)
     
     # ===== MY TASKS SECTION =====
-    # Get user's current tasks (personal tasks + assigned to me + created by me)
+    # Get user's current tasks (ALL tasks related to user - created OR assigned)
     my_tasks = Task.objects.filter(
-        Q(created_by=user, assigned_to__isnull=True) |  # My personal tasks
-        Q(assigned_to=user) |  # Tasks assigned to me
-        Q(created_by=user, assigned_to__isnull=False)  # Tasks I created and assigned to others
+        Q(created_by=user) | Q(assigned_to=user)
     ).filter(status='new').select_related('project', 'created_by', 'assigned_to').order_by('due_date', '-created_at')[:8]
     
     # Add permission flags to each task
@@ -75,26 +37,38 @@ def dashboard_view(request):
         task.can_be_deleted_by = task.can_be_deleted_by(user)
         task.can_change_status_by = task.can_change_status_by(user)
     
-    # ===== STATISTICS =====
-    # Total tasks related to user
+    # ===== إحصائيات محدّثة =====
+    # إجمالي جميع المهام (المُنشأة أو المُسندة للمستخدم)
     total_my_tasks = Task.objects.filter(
         Q(created_by=user) | Q(assigned_to=user)
     ).count()
     
-    # Tasks completed today
+    # المهام المُنشأة من قبل المستخدم (شامل المُسندة للآخرين)
+    my_created_tasks = Task.objects.filter(created_by=user).count()
+    
+    # المهام المُسندة للمستخدم فقط
+    assigned_to_me_tasks = Task.objects.filter(assigned_to=user).count()
+    
+    # المهام المُنشأة والمُسندة للآخرين
+    my_assigned_to_others = Task.objects.filter(
+        created_by=user, 
+        assigned_to__isnull=False
+    ).exclude(assigned_to=user).count()
+    
+    # المهام المكتملة اليوم (جميع المهام المرتبطة بالمستخدم)
     completed_tasks_today = Task.objects.filter(
         Q(created_by=user) | Q(assigned_to=user),
         status='finished',
         updated_at__date=today
     ).count()
     
-    # Pending tasks (new status)
+    # المهام المعلقة (حالة جديد)
     pending_tasks = Task.objects.filter(
         Q(created_by=user) | Q(assigned_to=user),
         status='new'
     ).count()
     
-    # Overdue tasks
+    # المهام المتأخرة
     overdue_tasks = Task.objects.filter(
         Q(created_by=user) | Q(assigned_to=user),
         status='new',
@@ -112,15 +86,14 @@ def dashboard_view(request):
         'current_page': 'dashboard',
         'greeting_message': greeting_message,
         
-        # Notifications
-        'notifications': notifications,
-        'notifications_count': notifications_count,
-        
         # Tasks
         'my_tasks': my_tasks,
         
-        # Statistics
+        # إحصائيات مفصّلة
         'total_my_tasks': total_my_tasks,
+        'my_created_tasks': my_created_tasks,
+        'assigned_to_me_tasks': assigned_to_me_tasks,
+        'my_assigned_to_others': my_assigned_to_others,
         'completed_tasks_today': completed_tasks_today,
         'pending_tasks': pending_tasks,
         'overdue_tasks': overdue_tasks,
@@ -128,6 +101,7 @@ def dashboard_view(request):
     }
     
     return render(request, 'dashboard/dashboard.html', context)
+
 
 
 @login_required

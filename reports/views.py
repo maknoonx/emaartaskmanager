@@ -81,12 +81,16 @@ def financial_reports_view(request):
     context = {'title': 'التقارير المالية', 'current_page': 'reports'}
     return render(request, 'reports/financial_reports.html', context)
 
+
+
+
+# ===== تحديث Monthly Report View =====
 @login_required
 def monthly_report_view(request):
     """
-    Monthly Task Report - Shows report for the current logged-in user only
+    Monthly Task Report - Shows comprehensive report including ALL tasks
     """
-    # Get filter parameters
+    # الحصول على معايير الفلتر
     selected_month = request.GET.get('month', str(datetime.now().month))
     selected_year = request.GET.get('year', str(datetime.now().year))
     
@@ -97,7 +101,7 @@ def monthly_report_view(request):
         month = datetime.now().month
         year = datetime.now().year
     
-    # Get month name in Arabic
+    # أسماء الشهور بالعربية
     month_names = {
         1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل',
         5: 'مايو', 6: 'يونيو', 7: 'يوليو', 8: 'أغسطس',
@@ -106,83 +110,110 @@ def monthly_report_view(request):
     
     month_name = month_names.get(month, 'غير محدد')
     
-    # Get date range for the month
+    # نطاق التاريخ للشهر
     first_day = date(year, month, 1)
     last_day = date(year, month, monthrange(year, month)[1])
     
-    # Get only the current user's data
+    # الحصول على بيانات المستخدم الحالي فقط
     employee = request.user
     
-    # Prepare employee report data
-    employee_reports = []
-    if Task:  # Check if Task model is available
-        # Tasks created in the selected month
-        tasks_created = Task.objects.filter(
+    # تحضير بيانات التقرير
+    if Task:  # التأكد من توفر نموذج Task
+        # جميع المهام المرتبطة بالموظف في الشهر المحدد (مُنشأة أو مُسندة)
+        all_related_tasks = Task.objects.filter(
             Q(created_by=employee) | Q(assigned_to=employee),
             created_at__date__gte=first_day,
             created_at__date__lte=last_day
-        ).distinct()
+        ).distinct().order_by('created_at')
         
-        # Tasks completed in the selected month
+        # المهام التي أنشأها الموظف في الشهر (شامل المُسندة للآخرين)
+        tasks_created = Task.objects.filter(
+            created_by=employee,
+            created_at__date__gte=first_day,
+            created_at__date__lte=last_day
+        ).distinct().order_by('created_at')
+        
+        # المهام المُسندة للموظف في الشهر
+        tasks_assigned_to_me = Task.objects.filter(
+            assigned_to=employee,
+            created_at__date__gte=first_day,
+            created_at__date__lte=last_day
+        ).distinct().order_by('created_at')
+        
+        # المهام المكتملة في الشهر المحدد
         tasks_completed = Task.objects.filter(
             Q(created_by=employee) | Q(assigned_to=employee),
             status='finished',
             updated_at__date__gte=first_day,
             updated_at__date__lte=last_day
-        ).distinct()
+        ).distinct().order_by('updated_at')
         
-        # Tasks that were due in the month but not completed
+        # المهام المتأخرة
         overdue_tasks = Task.objects.filter(
             Q(created_by=employee) | Q(assigned_to=employee),
             due_date__gte=first_day,
             due_date__lte=last_day,
             status='new'
-        ).distinct()
+        ).distinct().order_by('due_date')
         
-        # All tasks for the employee (for context)
-        all_tasks = Task.objects.filter(
-            Q(created_by=employee) | Q(assigned_to=employee)
-        ).distinct()
+        # المهام المُسندة للآخرين من قبل الموظف
+        tasks_assigned_to_others = Task.objects.filter(
+            created_by=employee,
+            assigned_to__isnull=False,
+            created_at__date__gte=first_day,
+            created_at__date__lte=last_day
+        ).exclude(assigned_to=employee).distinct().order_by('created_at')
         
     else:
-        # Fallback if Task model is not available
+        # في حالة عدم توفر نموذج Task
+        all_related_tasks = []
         tasks_created = []
+        tasks_assigned_to_me = []
         tasks_completed = []
         overdue_tasks = []
-        all_tasks = []
+        tasks_assigned_to_others = []
     
-    # Get monthly goals for the selected month
+    # الحصول على الأهداف الشهرية
     monthly_goals = []
-    if MonthlyGoal:  # Check if MonthlyGoal model is available
+    if MonthlyGoal:
         monthly_goals = MonthlyGoal.objects.filter(
             employee=employee,
             month=month,
             year=year
         )
     
-    # Calculate statistics
+    # حساب الإحصائيات الشاملة
+    total_all_related = len(all_related_tasks)
     total_created = len(tasks_created)
+    total_assigned_to_me = len(tasks_assigned_to_me)
     total_completed = len(tasks_completed)
     total_overdue = len(overdue_tasks)
-    completion_rate = (total_completed / total_created * 100) if total_created > 0 else 0
+    total_assigned_to_others = len(tasks_assigned_to_others)
     
-    # Create the employee report data
+    completion_rate = (total_completed / total_all_related * 100) if total_all_related > 0 else 0
+    
+    # إنشاء بيانات تقرير الموظف
     employee_report = {
         'employee': employee,
+        'all_related_tasks': all_related_tasks,
         'tasks_created': tasks_created,
+        'tasks_assigned_to_me': tasks_assigned_to_me,
         'tasks_completed': tasks_completed,
         'overdue_tasks': overdue_tasks,
+        'tasks_assigned_to_others': tasks_assigned_to_others,
         'monthly_goals': monthly_goals,
         'stats': {
+            'total_all_related': total_all_related,
             'total_created': total_created,
+            'total_assigned_to_me': total_assigned_to_me,
             'total_completed': total_completed,
             'total_overdue': total_overdue,
+            'total_assigned_to_others': total_assigned_to_others,
             'completion_rate': round(completion_rate, 1),
-            'total_tasks': len(all_tasks),
         }
     }
     
-    # Generate year range for filter
+    # نطاق السنوات للفلتر
     current_year = datetime.now().year
     year_range = list(range(current_year - 2, current_year + 3))
     
@@ -197,10 +228,12 @@ def monthly_report_view(request):
         'year_range': year_range,
         'month_names': month_names,
         'report_date': f"{month_name} {year}",
-        'has_data': total_created > 0 or total_completed > 0 or total_overdue > 0 or len(monthly_goals) > 0,
+        'has_data': total_all_related > 0 or len(monthly_goals) > 0,
     }
     
     return render(request, 'reports/my_monthly_report.html', context)
+
+
 
 @login_required
 def monthly_report_print_view(request):

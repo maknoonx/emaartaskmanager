@@ -15,8 +15,15 @@ Employee = get_user_model()
 @login_required
 def index(request):
     """
-    Display all employees with search and filter functionality
+    Display all employees with search and filter functionality including task statistics
     """
+    # Import Task model
+    try:
+        from tasks.models import Task
+        has_tasks = True
+    except ImportError:
+        has_tasks = False
+    
     employees = Employee.objects.all()
     
     # Search functionality
@@ -42,13 +49,87 @@ def index(request):
     elif status_filter == 'inactive':
         employees = employees.filter(is_active_employee=False)
     
+    # Add task statistics to each employee
+    employees_with_stats = []
+    for employee in employees:
+        if has_tasks:
+            # Calculate comprehensive task statistics for each employee
+            total_tasks = Task.objects.filter(
+                Q(created_by=employee) | Q(assigned_to=employee)
+            ).count()
+            
+            created_tasks = Task.objects.filter(created_by=employee).count()
+            assigned_tasks = Task.objects.filter(assigned_to=employee).count()
+            
+            # Tasks assigned to others by this employee
+            assigned_to_others = Task.objects.filter(
+                created_by=employee,
+                assigned_to__isnull=False
+            ).exclude(assigned_to=employee).count()
+            
+            completed_tasks = Task.objects.filter(
+                Q(created_by=employee) | Q(assigned_to=employee),
+                status='finished'
+            ).count()
+            
+            pending_tasks = Task.objects.filter(
+                Q(created_by=employee) | Q(assigned_to=employee),
+                status='new'
+            ).count()
+            
+            # Calculate completion rate
+            completion_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
+            
+            # Add stats to employee object
+            employee.task_stats = {
+                'total_tasks': total_tasks,
+                'created_tasks': created_tasks,
+                'assigned_tasks': assigned_tasks,
+                'assigned_to_others': assigned_to_others,
+                'completed_tasks': completed_tasks,
+                'pending_tasks': pending_tasks,
+                'completion_rate': round(completion_rate, 1)
+            }
+        else:
+            # If no Task model, set empty stats
+            employee.task_stats = {
+                'total_tasks': 0,
+                'created_tasks': 0,
+                'assigned_tasks': 0,
+                'assigned_to_others': 0,
+                'completed_tasks': 0,
+                'pending_tasks': 0,
+                'completion_rate': 0
+            }
+        
+        employees_with_stats.append(employee)
+    
     # Pagination
-    paginator = Paginator(employees, 10)  # 10 employees per page
+    paginator = Paginator(employees_with_stats, 10)  # 10 employees per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
     # Get section choices for filter dropdown
     section_choices = Employee.SECTION_CHOICES
+    
+    # Calculate overall statistics
+    if has_tasks:
+        total_all_tasks = Task.objects.count()
+        total_completed_tasks = Task.objects.filter(status='finished').count()
+        total_pending_tasks = Task.objects.filter(status='new').count()
+        
+        # Tasks assigned to others statistics
+        total_assigned_to_others = Task.objects.filter(
+            assigned_to__isnull=False
+        ).exclude(created_by=None).count()
+        
+        overall_completion_rate = (total_completed_tasks / total_all_tasks * 100) if total_all_tasks > 0 else 0
+    else:
+        total_all_tasks = 0
+        total_completed_tasks = 0
+        total_pending_tasks = 0
+        total_assigned_to_others = 0
+        overall_completion_rate = 0
     
     context = {
         'title': 'إدارة الموظفين',
@@ -58,12 +139,24 @@ def index(request):
         'section_filter': section_filter,
         'status_filter': status_filter,
         'section_choices': section_choices,
+        
+        # Employee statistics
         'total_employees': Employee.objects.count(),
         'active_employees': Employee.objects.filter(is_active_employee=True).count(),
         'inactive_employees': Employee.objects.filter(is_active_employee=False).count(),
+        
+        # Task statistics
+        'has_tasks': has_tasks,
+        'total_all_tasks': total_all_tasks,
+        'total_completed_tasks': total_completed_tasks,
+        'total_pending_tasks': total_pending_tasks,
+        'total_assigned_to_others': total_assigned_to_others,
+        'overall_completion_rate': round(overall_completion_rate, 1),
     }
     
     return render(request, 'employees/index.html', context)
+
+
 
 @login_required
 def detail(request, pk):

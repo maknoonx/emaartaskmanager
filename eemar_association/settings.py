@@ -20,16 +20,12 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_USE_SESSIONS = False
 CSRF_COOKIE_NAME = 'csrftoken'
 
-
-
 # CSRF settings for Railway deployment
 CSRF_TRUSTED_ORIGINS = [
     'https://emaartaskmanager-production.up.railway.app',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
 ]
-
-
 
 # Application definition
 INSTALLED_APPS = [
@@ -191,6 +187,31 @@ EMAIL_HOST_USER = 'emaar2023@gmail.com'
 EMAIL_HOST_PASSWORD = 'jofo ffrs siry bfeb'
 DEFAULT_FROM_EMAIL = 'جمعية إعمار <emaar2023@gmail.com>'
 
+# ====== CELERY CONFIGURATION ======
+# Redis URL for Celery (you can use Railway's Redis or local Redis)
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+
+# Celery Configuration
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = True
+
+# Celery Task Settings
+CELERY_TASK_ALWAYS_EAGER = False  # Set to True for development without Redis
+CELERY_TASK_EAGER_PROPAGATES = False
+CELERY_TASK_IGNORE_RESULT = False
+CELERY_TASK_STORE_EAGER_RESULT = True
+
+# Celery Beat Schedule Settings
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# Use Celery for emails in production
+USE_CELERY_FOR_EMAILS = os.environ.get('USE_CELERY_FOR_EMAILS', 'False').lower() == 'true'
+
 # ====== LOGGING CONFIGURATION ======
 LOGGING = {
     'version': 1,
@@ -204,12 +225,28 @@ LOGGING = {
             'format': '{levelname} {message}',
             'style': '{',
         },
+        'notification': {
+            'format': '[NOTIFICATION] {asctime} {levelname} {message}',
+            'style': '{',
+        },
     },
     'handlers': {
         'console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
+        },
+        'notification_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'notifications.log',
+            'formatter': 'notification',
+        },
+        'celery_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'celery.log',
+            'formatter': 'verbose',
         },
     },
     'root': {
@@ -222,27 +259,60 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        'notifications': {
+            'handlers': ['notification_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'celery': {
+            'handlers': ['celery_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'celery.task': {
+            'handlers': ['celery_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
 
+# Create logs directory if it doesn't exist
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True)
+
 # ====== CACHING CONFIGURATION ======
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-        'TIMEOUT': 300,  # 5 minutes
-        'OPTIONS': {
-            'MAX_ENTRIES': 1000,
+# Use Redis for caching if available, otherwise use local memory
+if REDIS_URL and not DEBUG:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            },
+            'KEY_PREFIX': 'eemar_cache',
+            'TIMEOUT': 300,  # 5 minutes
         }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
+            'TIMEOUT': 300,  # 5 minutes
+            'OPTIONS': {
+                'MAX_ENTRIES': 1000,
+            }
+        }
+    }
 
 # ====== PAGINATION SETTINGS ======
 DEFAULT_PAGINATION_SIZE = 10
 MAX_PAGINATION_SIZE = 100
 
 # ====== SITE CONFIGURATION ======
-SITE_URL = 'http://localhost:8000'  # Change in production
+SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8000')
 SITE_NAME = 'نظام إدارة جمعية إعمار'
 
 # ====== EMAIL RATE LIMITING ======
@@ -251,8 +321,16 @@ EMAIL_RATE_LIMIT = {
     'MAX_EMAILS_PER_DAY': 200,
 }
 
-# ====== NOTIFICATION SETTINGS ======
+# ====== ENHANCED NOTIFICATION SETTINGS ======
 NOTIFICATION_SETTINGS = {
+    'SITE_NAME': SITE_NAME,
+    'SITE_URL': SITE_URL,
+    'SUPPORT_EMAIL': 'emaar2023@gmail.com',
+    'ENABLE_EMAIL_NOTIFICATIONS': True,
+    'MAX_DAILY_REMINDERS_PER_TASK': 3,
+    'REMINDER_INTERVAL_HOURS': 4,
+    
+    # Task notifications
     'TASK_ASSIGNED': {
         'enabled': True,
         'email': True,
@@ -268,14 +346,154 @@ NOTIFICATION_SETTINGS = {
         'email': True,
         'subject_template': 'تنبيه: مهمة متأخرة - {task_name}',
     },
+    
+    # Deadline reminders
+    'TASK_DUE_IN_3_DAYS': {
+        'enabled': True,
+        'email': True,
+        'subject_template': 'تذكير: تنتهي مهمتك بعد 3 أيام - {task_name}',
+    },
+    'TASK_DUE_TOMORROW': {
+        'enabled': True,
+        'email': True,
+        'subject_template': '⚠️ تنبيه: تنتهي مهمتك غداً - {task_name}',
+    },
+    'TASK_DUE_TODAY': {
+        'enabled': True,
+        'email': True,
+        'subject_template': '🚨 عاجل جداً: مهمتك تنتهي اليوم - {task_name}',
+    },
+    
+    # High priority reminders
+    'HIGH_PRIORITY_REMINDER': {
+        'enabled': True,
+        'email': True,
+        'subject_template': '🔥 عاجل - مهمة عالية الأولوية: {task_name}',
+    },
+    
+    # Daily digest
+    'DAILY_DIGEST': {
+        'enabled': True,
+        'email': True,
+        'subject_template': 'الملخص اليومي للمهام - {date}',
+    },
+}
+
+# ====== DEADLINE REMINDER SETTINGS ======
+DEADLINE_REMINDER_SETTINGS = {
+    'ENABLED': True,
+    'REMINDER_DAYS': [3, 1, 0],  # Days before due date to send reminders
+    'MAX_REMINDERS_PER_DAY': 3,
+    'REMINDER_INTERVAL_HOURS': 4,
+    'WEEKEND_REMINDERS': False,  # Send reminders on weekends
+    'HIGH_PRIORITY_EXTRA_REMINDERS': True,
+    'DEFAULT_REMINDER_TIME': '09:00',  # Default time to send reminders
 }
 
 # ====== EMAIL TEMPLATE SETTINGS ======
 EMAIL_TEMPLATE_SETTINGS = {
     'BASE_TEMPLATE': 'emails/base_email.html',
-    'LOGO_URL': 'https://your-domain.com/static/img/logo.png',
+    'LOGO_URL': f'{SITE_URL}/static/img/logo.png',
     'COMPANY_NAME': 'جمعية إعمار',
     'COMPANY_ADDRESS': 'المملكة العربية السعودية',
-    'SUPPORT_EMAIL': 'support@eemar.org',
+    'SUPPORT_EMAIL': 'emaar2023@gmail.com',
     'SUPPORT_PHONE': '+966-XXX-XXXX',
+    'PRIMARY_COLOR': '#0066cc',
+    'SECONDARY_COLOR': '#f8f9fa',
+    'SUCCESS_COLOR': '#28a745',
+    'WARNING_COLOR': '#ffc107',
+    'DANGER_COLOR': '#dc3545',
+    'INFO_COLOR': '#17a2b8',
 }
+
+# ====== TASK MANAGEMENT SETTINGS ======
+TASK_SETTINGS = {
+    'DEFAULT_STATUS': 'new',
+    'STATUS_CHOICES': [
+        ('new', 'جديدة'),
+        ('in_progress', 'قيد التنفيذ'),
+        ('finished', 'مكتملة'),
+        ('cancelled', 'ملغية'),
+    ],
+    'PRIORITY_CHOICES': [
+        ('low', 'منخفضة'),
+        ('medium', 'متوسطة'),
+        ('high', 'عالية'),
+        ('urgent', 'عاجل'),
+    ],
+    'AUTO_ASSIGN_NOTIFICATIONS': True,
+    'AUTO_COMPLETION_NOTIFICATIONS': True,
+    'OVERDUE_CHECK_ENABLED': True,
+}
+
+# ====== DEVELOPMENT SETTINGS ======
+if DEBUG:
+    # Development-specific settings
+    CELERY_TASK_ALWAYS_EAGER = True  # Execute tasks synchronously in development
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Print emails to console
+    
+    # Override notification settings for development
+    NOTIFICATION_SETTINGS['ENABLE_EMAIL_NOTIFICATIONS'] = True
+    DEADLINE_REMINDER_SETTINGS['ENABLED'] = True
+
+# ====== PRODUCTION SETTINGS ======
+if not DEBUG:
+    # Production-specific settings
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    
+    # Use real email backend in production
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    
+    # Enable Celery for background tasks
+    USE_CELERY_FOR_EMAILS = True
+    CELERY_TASK_ALWAYS_EAGER = False
+
+# ====== CUSTOM MIDDLEWARE SETTINGS ======
+CUSTOM_MIDDLEWARE_SETTINGS = {
+    'TASK_NOTIFICATION_MIDDLEWARE': True,
+    'DEADLINE_TRACKING_MIDDLEWARE': True,
+    'EMAIL_RATE_LIMITING_MIDDLEWARE': True,
+}
+
+# ====== API SETTINGS (if needed) ======
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': DEFAULT_PAGINATION_SIZE,
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+} if 'rest_framework' in INSTALLED_APPS else {}
+
+# ====== BACKUP SETTINGS ======
+BACKUP_SETTINGS = {
+    'NOTIFICATION_LOGS_RETENTION_DAYS': 90,
+    'TASK_REMINDER_TRACKER_RETENTION_DAYS': 30,
+    'EMAIL_LOG_RETENTION_DAYS': 60,
+    'AUTO_CLEANUP_ENABLED': True,
+}
+
+# ====== MONITORING SETTINGS ======
+MONITORING_SETTINGS = {
+    'EMAIL_QUEUE_MONITORING': True,
+    'CELERY_HEALTH_CHECK': True,
+    'NOTIFICATION_STATISTICS': True,
+    'DAILY_REPORTS': True,
+    'ALERT_THRESHOLDS': {
+        'FAILED_NOTIFICATIONS_PER_HOUR': 10,
+        'QUEUE_SIZE_WARNING': 100,
+        'RESPONSE_TIME_WARNING': 30,  # seconds
+    },
+}
+
+# Make sure the settings are available in templates
+def get_notification_settings():
+    return NOTIFICATION_SETTINGS
+
+def get_deadline_reminder_settings():
+    return DEADLINE_REMINDER_SETTINGS

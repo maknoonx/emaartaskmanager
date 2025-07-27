@@ -1,8 +1,9 @@
 # eemar_association/celery.py
-# Create this file for Celery configuration
+# تحديث إعدادات Celery لإضافة تذكيرات مواعيد انتهاء المهام
 
 import os
 from celery import Celery
+from celery.schedules import crontab
 from django.conf import settings
 
 # Set the default Django settings module for the 'celery' program
@@ -19,46 +20,67 @@ app.autodiscover_tasks()
 
 # Celery Beat Schedule for periodic tasks
 app.conf.beat_schedule = {
-    # Send daily digests at 9 AM every day
+    # إرسال تذكيرات المهام قريبة الانتهاء (يومياً في الساعة 9 صباحاً)
+    'send-task-deadline-reminders': {
+        'task': 'tasks.deadline_notifications.send_task_deadline_reminders',
+        'schedule': crontab(hour=9, minute=0),  # 9:00 AM daily
+        'options': {'queue': 'periodic'}
+    },
+    
+    # فحص إضافي للمهام المستحقة اليوم (كل 3 ساعات خلال ساعات العمل)
+    'urgent-deadline-check': {
+        'task': 'tasks.deadline_notifications.send_task_deadline_reminders',
+        'schedule': crontab(minute=0, hour='9,12,15,18'),  # 9 AM, 12 PM, 3 PM, 6 PM
+        'options': {'queue': 'periodic'}
+    },
+    
+    # إرسال الملخص اليومي (الموجود مسبقاً)
     'send-daily-digests': {
         'task': 'tasks.tasks.send_daily_digests_to_all_users',
-        'schedule': 30.0,  # Every 30 seconds for testing, change to crontab for production
-        # 'schedule': crontab(hour=9, minute=0),  # 9:00 AM daily
+        'schedule': crontab(hour=8, minute=30),  # 8:30 AM daily
+        'options': {'queue': 'periodic'}
     },
     
-    # Check for overdue tasks every hour
+    # فحص المهام المتأخرة (كل ساعتين خلال ساعات العمل)
     'check-overdue-tasks': {
         'task': 'tasks.tasks.check_overdue_tasks_and_notify',
-        'schedule': 60.0,  # Every minute for testing
-        # 'schedule': crontab(minute=0),  # Every hour
+        'schedule': crontab(minute=0, hour='8,10,12,14,16,18'),
+        'options': {'queue': 'periodic'}
     },
     
-    # Clean up old notification logs weekly
+    # تنظيف سجلات الإشعارات القديمة (أسبوعياً يوم الأحد الساعة 2 صباحاً)
     'cleanup-notification-logs': {
         'task': 'tasks.tasks.cleanup_old_notification_logs',
-        'schedule': 300.0,  # Every 5 minutes for testing
-        # 'schedule': crontab(hour=2, minute=0, day_of_week=1),  # 2 AM every Monday
+        'schedule': crontab(hour=2, minute=0, day_of_week=0),  # 2 AM every Sunday
+        'options': {'queue': 'maintenance'}
     },
     
-    # Send weekly reports on Sunday
+    # إرسال التقارير الأسبوعية (يوم الأحد الساعة 10 صباحاً)
     'send-weekly-reports': {
         'task': 'tasks.tasks.send_weekly_summary_reports',
-        'schedule': 600.0,  # Every 10 minutes for testing
-        # 'schedule': crontab(hour=10, minute=0, day_of_week=0),  # 10 AM every Sunday
+        'schedule': crontab(hour=10, minute=0, day_of_week=0),  # 10 AM every Sunday
+        'options': {'queue': 'periodic'}
     },
     
-    # Update notification statistics daily
+    # تحديث إحصائيات الإشعارات (يومياً الساعة 11 مساءً)
     'update-notification-stats': {
         'task': 'tasks.tasks.update_notification_statistics',
-        'schedule': 180.0,  # Every 3 minutes for testing
-        # 'schedule': crontab(hour=23, minute=0),  # 11 PM daily
+        'schedule': crontab(hour=23, minute=0),  # 11 PM daily
+        'options': {'queue': 'maintenance'}
     },
     
-    # Monitor email queue health every 15 minutes
+    # مراقبة صحة قائمة انتظار الإيميلات (كل 15 دقيقة)
     'monitor-email-queue': {
         'task': 'tasks.tasks.monitor_email_queue_health',
-        'schedule': 120.0,  # Every 2 minutes for testing
-        # 'schedule': crontab(minute='*/15'),  # Every 15 minutes
+        'schedule': crontab(minute='*/15'),  # Every 15 minutes
+        'options': {'queue': 'monitoring'}
+    },
+    
+    # تذكير خاص للمهام عالية الأولوية (كل ساعة خلال ساعات العمل)
+    'high-priority-task-reminders': {
+        'task': 'tasks.deadline_notifications.send_high_priority_reminders',
+        'schedule': crontab(minute=30, hour='8,9,10,11,12,13,14,15,16,17'),
+        'options': {'queue': 'periodic'}
     },
 }
 
@@ -74,16 +96,27 @@ app.conf.update(
     # Result backend settings
     result_expires=3600,  # 1 hour
     
-    # Task routing
+    # Task routing - توجيه المهام لطوابير مختلفة
     task_routes={
+        # مهام الإيميلات
         'tasks.tasks.send_task_assigned_email_task': {'queue': 'emails'},
         'tasks.tasks.send_task_completed_email_task': {'queue': 'emails'},
         'tasks.tasks.send_task_overdue_email_task': {'queue': 'emails'},
         'tasks.tasks.send_daily_digest_task': {'queue': 'emails'},
+        'tasks.deadline_notifications.send_deadline_reminder_email': {'queue': 'emails'},
+        
+        # المهام الدورية
         'tasks.tasks.send_daily_digests_to_all_users': {'queue': 'periodic'},
         'tasks.tasks.check_overdue_tasks_and_notify': {'queue': 'periodic'},
+        'tasks.deadline_notifications.send_task_deadline_reminders': {'queue': 'periodic'},
+        'tasks.deadline_notifications.send_high_priority_reminders': {'queue': 'periodic'},
+        
+        # مهام الصيانة
         'tasks.tasks.cleanup_old_notification_logs': {'queue': 'maintenance'},
         'tasks.tasks.update_notification_statistics': {'queue': 'maintenance'},
+        
+        # مهام المراقبة
+        'tasks.tasks.monitor_email_queue_health': {'queue': 'monitoring'},
     },
     
     # Worker settings
@@ -98,51 +131,58 @@ app.conf.update(
     # Retry settings
     task_default_retry_delay=60,
     task_max_retries=3,
+    
+    # Queue configurations
+    task_default_queue='default',
+    task_queues={
+        'default': {
+            'exchange': 'default',
+            'routing_key': 'default',
+        },
+        'emails': {
+            'exchange': 'emails',
+            'routing_key': 'emails',
+        },
+        'periodic': {
+            'exchange': 'periodic',
+            'routing_key': 'periodic',
+        },
+        'maintenance': {
+            'exchange': 'maintenance',
+            'routing_key': 'maintenance',
+        },
+        'monitoring': {
+            'exchange': 'monitoring',
+            'routing_key': 'monitoring',
+        },
+    },
 )
 
 @app.task(bind=True)
 def debug_task(self):
     print(f'Request: {self.request!r}')
 
-# Production beat schedule (uncomment for production)
-"""
-from celery.schedules import crontab
+# إعداد للبيئة الإنتاجية مع جدولة محسّنة
+# يمكن تخصيص هذه الأوقات حسب متطلبات العمل في المؤسسة
 
-app.conf.beat_schedule = {
-    # Send daily digests at 9 AM every day
-    'send-daily-digests': {
-        'task': 'tasks.tasks.send_daily_digests_to_all_users',
-        'schedule': crontab(hour=9, minute=0),
-    },
-    
-    # Check for overdue tasks every 2 hours during work hours
-    'check-overdue-tasks': {
-        'task': 'tasks.tasks.check_overdue_tasks_and_notify',
-        'schedule': crontab(minute=0, hour='8,10,12,14,16'),
-    },
-    
-    # Clean up old notification logs weekly on Sunday at 2 AM
-    'cleanup-notification-logs': {
-        'task': 'tasks.tasks.cleanup_old_notification_logs',
-        'schedule': crontab(hour=2, minute=0, day_of_week=0),
-    },
-    
-    # Send weekly reports on Sunday at 10 AM
-    'send-weekly-reports': {
-        'task': 'tasks.tasks.send_weekly_summary_reports',
-        'schedule': crontab(hour=10, minute=0, day_of_week=0),
-    },
-    
-    # Update notification statistics daily at 11 PM
-    'update-notification-stats': {
-        'task': 'tasks.tasks.update_notification_statistics',
-        'schedule': crontab(hour=23, minute=0),
-    },
-    
-    # Monitor email queue health every 15 minutes
-    'monitor-email-queue': {
-        'task': 'tasks.tasks.monitor_email_queue_health',
-        'schedule': crontab(minute='*/15'),
-    },
-}
+"""
+ملاحظات حول الجدولة:
+
+1. تذكيرات المواعيد النهائية:
+   - الساعة 9 صباحاً: فحص شامل وإرسال جميع التذكيرات
+   - كل 3 ساعات: فحص إضافي للمهام المستحقة اليوم
+
+2. المهام المتأخرة:
+   - كل ساعتين خلال ساعات العمل (8ص-6م)
+
+3. الملخص اليومي:
+   - الساعة 8:30 صباحاً قبل بداية العمل
+
+4. التقارير والصيانة:
+   - أسبوعياً يوم الأحد للتقارير والتنظيف
+
+5. المراقبة:
+   - كل 15 دقيقة لمراقبة صحة النظام
+
+للتشغيل في بيئة التطوير، يمكن تقليل الفترات الزمنية للاختبار.
 """

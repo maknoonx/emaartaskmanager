@@ -441,14 +441,15 @@
     </div>
 </div>
 
-<!-- Statistics Row -->
+<!-- تحديث إحصائيات لوحة التحكم -->
 <div class="row mb-4">
     <div class="col-lg-3 col-md-6 mb-3">
-        <div class="stats-card">
+        <div class="stats-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h3 class="mb-1">{{ total_my_tasks }}</h3>
                     <p class="mb-0">إجمالي مهامي</p>
+                    <small class="text-light">شامل المُنشأة والمُسندة</small>
                 </div>
                 <div>
                     <i class="bx bx-task bx-lg opacity-75"></i>
@@ -458,7 +459,55 @@
     </div>
     
     <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1">{{ my_created_tasks }}</h3>
+                    <p class="mb-0">المهام المُنشأة</p>
+                    <small class="text-light">شامل المُسندة للآخرين</small>
+                </div>
+                <div>
+                    <i class="bx bx-plus-circle bx-lg opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1">{{ assigned_to_me_tasks }}</h3>
+                    <p class="mb-0">المُسندة لي</p>
+                    <small class="text-light">من الآخرين</small>
+                </div>
+                <div>
+                    <i class="bx bx-user-check bx-lg opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
         <div class="stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1">{{ my_assigned_to_others }}</h3>
+                    <p class="mb-0">أسندتها للآخرين</p>
+                    <small class="text-light">من إنشائي</small>
+                </div>
+                <div>
+                    <i class="bx bx-user-plus bx-lg opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- إحصائيات إضافية -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h3 class="mb-1">{{ completed_tasks_today }}</h3>
@@ -472,11 +521,25 @@
     </div>
     
     <div class="col-lg-3 col-md-6 mb-3">
-        <div class="stats-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+        <div class="stats-card" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1">{{ pending_tasks }}</h3>
+                    <p class="mb-0">معلقة</p>
+                </div>
+                <div>
+                    <i class="bx bx-time-five bx-lg opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h3 class="mb-1">{{ overdue_tasks }}</h3>
-                    <p class="mb-0">مهام متأخرة</p>
+                    <p class="mb-0">متأخرة</p>
                 </div>
                 <div>
                     <i class="bx bx-error-circle bx-lg opacity-75"></i>
@@ -500,6 +563,45 @@
     </div>
 </div>
 
+<!-- قسم معلومات إضافية -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bx bx-info-circle me-2"></i>
+                    ملخص شامل للمهام
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">المهام التي أنشأتها:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bx bx-check text-success me-2"></i>إجمالي المهام المُنشأة: <strong>{{ my_created_tasks }}</strong></li>
+                            <li><i class="bx bx-user-plus text-info me-2"></i>منها مُسندة للآخرين: <strong>{{ my_assigned_to_others }}</strong></li>
+                            <li><i class="bx bx-user text-primary me-2"></i>منها شخصية (غير مُسندة): <strong>{{ my_created_tasks|add:"-"|add:my_assigned_to_others|add:"-"|add:assigned_to_me_tasks }}</strong></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">المهام المُسندة لي:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bx bx-user-check text-success me-2"></i>إجمالي المُسندة لي: <strong>{{ assigned_to_me_tasks }}</strong></li>
+                            <li><i class="bx bx-task text-warning me-2"></i>المعلقة: <strong>{{ pending_tasks }}</strong></li>
+                            <li><i class="bx bx-error text-danger me-2"></i>المتأخرة: <strong>{{ overdue_tasks }}</strong></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3" role="alert">
+                    <i class="bx bx-info-circle me-2"></i>
+                    <strong>ملاحظة:</strong> إجمالي مهامي ({{ total_my_tasks }}) يشمل جميع المهام التي أنشأتها أو التي تم إسنادها لي، بما في ذلك المهام التي أنشأتها وأسندتها للآخرين.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Task Action Modals -->
 <div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -517,10 +619,17 @@
     </div>
 </div>
 {% endblock %}
-
 {% block extra_js %}
 <script>
 $(document).ready(function() {
+    // Add CSRF token form to the page if it doesn't exist
+    if (!document.querySelector('[name=csrfmiddlewaretoken]')) {
+        const csrfForm = document.createElement('form');
+        csrfForm.style.display = 'none';
+        csrfForm.innerHTML = '{% csrf_token %}';
+        document.body.appendChild(csrfForm);
+    }
+
     // Quick task completion
     $('.task-complete-btn').on('click', function(e) {
         e.preventDefault();
@@ -547,7 +656,41 @@ $(document).ready(function() {
     });
     
     function toggleTaskStatus(taskId) {
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        // Get CSRF token from multiple sources
+        function getCsrfToken() {
+            // Try cookie first
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'csrftoken') {
+                    return decodeURIComponent(value);
+                }
+            }
+            
+            // Try meta tag
+            const csrfMeta = document.querySelector('meta[name=csrf-token]');
+            if (csrfMeta) {
+                return csrfMeta.getAttribute('content');
+            }
+            
+            // Try form input
+            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (csrfInput) {
+                return csrfInput.value;
+            }
+            
+            return null;
+        }
+        
+        const csrfToken = getCsrfToken();
+        
+        if (!csrfToken) {
+            console.error('CSRF token not found');
+            alert('خطأ في التحقق من الأمان - يرجى إعادة تحميل الصفحة');
+            return;
+        }
+        
+        console.log('Using CSRF token:', csrfToken);
         
         $.ajax({
             url: `/tasks/tasks/${taskId}/toggle-status/`,
@@ -561,14 +704,21 @@ $(document).ready(function() {
             },
             success: function(response) {
                 if (response.success) {
-                    showToast('success', response.message);
+                    alert(response.message);
                     setTimeout(() => window.location.reload(), 1000);
                 } else {
-                    showToast('error', response.error || 'حدث خطأ');
+                    alert(response.error || 'حدث خطأ أثناء تحديث المهمة');
                 }
             },
-            error: function() {
-                showToast('error', 'حدث خطأ أثناء تحديث المهمة');
+            error: function(xhr, status, error) {
+                console.error('Toggle status error:', xhr.status, error, xhr.responseText);
+                if (xhr.status === 403) {
+                    alert('خطأ في التحقق من الصلاحيات - يرجى إعادة تحميل الصفحة');
+                } else if (xhr.status === 404) {
+                    alert('المهمة غير موجودة');
+                } else {
+                    alert('حدث خطأ أثناء تحديث المهمة');
+                }
             }
         });
     }
@@ -591,14 +741,20 @@ $(document).ready(function() {
         
         modal.modal('show');
         
+        const csrfToken = getCsrfToken();
+        
         $.ajax({
             url: url,
             method: 'GET',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            },
             success: function(response) {
                 modalContent.html(response);
             },
-            error: function() {
+            error: function(xhr, status, error) {
+                console.error('Modal load error:', xhr.status, error);
                 modalContent.html(`
                     <div class="modal-header">
                         <h5 class="modal-title text-danger">خطأ</h5>
@@ -612,42 +768,32 @@ $(document).ready(function() {
             }
         });
     }
-    
-    function showToast(type, message) {
-        $('.toast-container').remove();
+
+    // Helper function to get CSRF token (used by loadTaskModal)
+    function getCsrfToken() {
+        // Try cookie first
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'csrftoken') {
+                return decodeURIComponent(value);
+            }
+        }
         
-        const toastClass = type === 'success' ? 'bg-success' : 'bg-danger';
-        const iconClass = type === 'success' ? 'bx-check' : 'bx-x';
+        // Try meta tag
+        const csrfMeta = document.querySelector('meta[name=csrf-token]');
+        if (csrfMeta) {
+            return csrfMeta.getAttribute('content');
+        }
         
-        const toastHTML = `
-            <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
-                <div class="toast show ${toastClass} text-white" role="alert">
-                    <div class="toast-header ${toastClass} text-white border-0">
-                        <i class="bx ${iconClass} me-2"></i>
-                        <strong class="me-auto">${type === 'success' ? 'نجح' : 'خطأ'}</strong>
-                        <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="toast"></button>
-                    </div>
-                    <div class="toast-body">
-                        ${message}
-                    </div>
-                </div>
-            </div>
-        `;
+        // Try form input
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfInput) {
+            return csrfInput.value;
+        }
         
-        $('body').append(toastHTML);
-        
-        setTimeout(() => {
-            $('.toast-container').fadeOut(300, function() {
-                $(this).remove();
-            });
-        }, 3000);
+        return null;
     }
-    
-    // Auto-refresh notifications every 5 minutes
-    setInterval(function() {
-        // You can implement AJAX call to refresh notifications
-        // without reloading the entire page
-    }, 300000); // 5 minutes
 });
 </script>
 {% endblock %}
