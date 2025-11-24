@@ -30,6 +30,9 @@ urlpatterns = [
     
     # Reports
     path('reports/', include('reports.urls')),
+
+    # annualreport
+    path('annual-report/', include('annualreport.urls')),
 ]
 
 # Serve media files in development

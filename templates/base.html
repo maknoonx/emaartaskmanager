@@ -15,7 +15,7 @@
     <!-- Arabic Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/boxicons/2.1.4/css/boxicons.min.css" />
@@ -50,7 +50,7 @@
                             <span class="brand-text-mobile">جمعية إعمار</span>
                         </div>
                         
-                        <!-- Mobile User Actions - FIXED: Removed Settings -->
+                        <!-- Mobile User Actions -->
                         <div class="navbar-actions-mobile">
                             <div class="dropdown">
                                 <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -102,7 +102,7 @@
                         </a>
                     </li>
 
-                    <!-- NEW: Employee Tasks Section - Only for users with employee view permissions -->
+                    <!-- Employee Tasks Section - Only for users with employee view permissions -->
                     {% if perms.employees.view_employee or user.is_superuser %}
                     <li class="menu-item {% if current_page == 'employee_tasks' %}active{% endif %}">
                         <a href="{% url 'tasks:employee_tasks_list' %}" class="menu-link" title="مهام الموظفين">
@@ -123,6 +123,14 @@
                         <a href="{% url 'reports:monthly' %}" class="menu-link" title="التقارير الشهرية">
                             <i class="menu-icon tf-icons bx bx-chart"></i>
                             <div class="menu-text">التقارير الشهرية</div>
+                        </a>
+                    </li>
+
+                    <!-- NEW: Annual Report 2025 -->
+                    <li class="menu-item {% if current_page == 'annual_report' %}active{% endif %}">
+                        <a href="{% url 'annualreport:index' %}" class="menu-link" title="التقرير السنوي 2025">
+                            <i class="menu-icon tf-icons bx bx-trophy"></i>
+                            <div class="menu-text">التقرير السنوي 2025</div>
                         </a>
                     </li>
 
@@ -161,13 +169,10 @@
                     </li>
                     {% endif %}
 
-
                     <!-- Menu Divider -->
                     <li class="menu-header small text-uppercase">
                         <span class="menu-header-text">الحساب</span>
                     </li>
-
-
 
                     <li class="menu-item">
                         <a href="{% url 'employees:logout' %}" class="menu-link" title="تسجيل الخروج">
@@ -188,8 +193,6 @@
                     <!-- Content -->
                     <div class="container-xxl flex-grow-1 container-p-y">
                         
-
-
                         <!-- Page Content -->
                         {% block content %}
                         {% endblock %}

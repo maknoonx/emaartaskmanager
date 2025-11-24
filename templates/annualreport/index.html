@@ -1,0 +1,650 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}التقرير السنوي 2025 - جمعية إعمار{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Annual Report Specific Styles */
+.achievement-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-xl);
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+    transition: all var(--transition-base);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.achievement-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--primary);
+    transform: scaleY(0);
+    transition: transform var(--transition-base);
+}
+
+.achievement-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+    border-color: var(--primary);
+}
+
+.achievement-card:hover::before {
+    transform: scaleY(1);
+}
+
+.achievement-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.achievement-section-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.375rem 0.875rem;
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.section-general { background: #E0F2FE; color: #075985; }
+.section-governance { background: #F3E8FF; color: #6B21A8; }
+.section-technical { background: #DBEAFE; color: #1E40AF; }
+.section-marketing { background: #FEE2E2; color: #991B1B; }
+.section-social_research { background: #D1FAE5; color: #065F46; }
+.section-projects { background: #FEF3C7; color: #92400E; }
+.section-volunteering { background: #FCE7F3; color: #9F1239; }
+
+.achievement-title {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+.achievement-description {
+    font-size: var(--text-base);
+    color: var(--gray-600);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.achievement-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 1rem;
+    border-top: 1px solid var(--gray-200);
+    gap: 1rem;
+}
+
+.achievement-date {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--text-sm);
+    color: var(--gray-500);
+    font-weight: 500;
+}
+
+.achievement-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.achievement-actions .btn {
+    padding: 0.5rem 0.875rem;
+    font-size: var(--text-sm);
+}
+
+.filter-section {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.125rem;
+    border: 2px solid var(--gray-300);
+    background: var(--white);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+}
+
+.filter-chip:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.filter-chip.active {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: var(--white);
+}
+
+.filter-chip .badge {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+}
+
+.filter-chip.active .badge {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    text-align: center;
+    transition: all var(--transition-base);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-value {
+    font-size: var(--text-3xl);
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--gray-600);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-state-icon {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 2rem;
+    background: var(--gray-100);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-state-icon i {
+    font-size: 4rem;
+    color: var(--gray-400);
+}
+
+.page-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    border-radius: var(--radius-2xl);
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    color: var(--white);
+    position: relative;
+    overflow: hidden;
+}
+
+.page-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.page-header-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.page-header-title {
+    flex: 1;
+}
+
+.page-header-title h1 {
+    font-size: var(--text-3xl);
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+
+.page-header-title p {
+    font-size: var(--text-lg);
+    opacity: 0.95;
+}
+
+/* Responsive */
+@media (max-width: 991.98px) {
+    .achievement-card {
+        padding: 1.5rem;
+    }
+    
+    .page-header {
+        padding: 2rem;
+    }
+    
+    .page-header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .achievement-card {
+        padding: 1.25rem;
+    }
+    
+    .achievement-title {
+        font-size: var(--text-lg);
+    }
+    
+    .achievement-meta {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .achievement-actions {
+        width: 100%;
+    }
+    
+    .achievement-actions .btn {
+        flex: 1;
+    }
+    
+    .filter-chips {
+        flex-direction: column;
+    }
+    
+    .filter-chip {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-content">
+        <div class="page-header-title">
+            <h1><i class="bx bx-trophy me-2"></i>التقرير السنوي 2025</h1>
+            <p>إنجازات جمعية إعمار خلال عام 2025م</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-lg" style="background: white; color: var(--primary);" id="addAchievementBtn">
+                <i class="bx bx-plus-circle me-2"></i>
+                إضافة إنجاز جديد
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Overview -->
+<div class="stats-overview">
+    <div class="stat-card">
+        <div class="stat-value">{{ total_achievements }}</div>
+        <div class="stat-label">إجمالي الإنجازات</div>
+    </div>
+    
+    {% for section_code, section_data in section_stats.items %}
+    {% if section_data.count > 0 %}
+    <div class="stat-card">
+        <div class="stat-value">{{ section_data.count }}</div>
+        <div class="stat-label">{{ section_data.name }}</div>
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+
+<!-- Filter Section -->
+<div class="filter-section">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="mb-0"><i class="bx bx-filter me-2"></i>تصفية حسب القسم</h5>
+        {% if section_filter %}
+        <a href="{% url 'annualreport:index' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bx bx-x me-1"></i>
+            إلغاء التصفية
+        </a>
+        {% endif %}
+    </div>
+    
+    <div class="filter-chips">
+        <a href="{% url 'annualreport:index' %}" 
+           class="filter-chip {% if not section_filter %}active{% endif %}">
+            <i class="bx bx-list-ul"></i>
+            <span>جميع الأقسام</span>
+            <span class="badge">{{ total_achievements }}</span>
+        </a>
+        
+        {% for section_code, section_name in section_choices %}
+        <a href="?section={{ section_code }}" 
+           class="filter-chip {% if section_filter == section_code %}active{% endif %}">
+            <i class="bx bx-folder"></i>
+            <span>{{ section_name }}</span>
+            <span class="badge">{{ section_counts|get_item:section_code|default:0 }}</span>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Achievements Grid -->
+<div class="row">
+    {% if achievements %}
+        {% for achievement in achievements %}
+        <div class="col-lg-6 col-12">
+            <div class="achievement-card" data-achievement-id="{{ achievement.pk }}">
+                <span class="achievement-section-badge section-{{ achievement.section }}">
+                    {{ achievement.get_section_display }}
+                </span>
+                
+                <div class="achievement-header">
+                    <div style="flex: 1;">
+                        <h3 class="achievement-title">{{ achievement.title }}</h3>
+                        <p class="achievement-description">{{ achievement.description }}</p>
+                    </div>
+                </div>
+                
+                <div class="achievement-meta">
+                    <div class="achievement-date">
+                        {% if achievement.achievement_date %}
+                        <i class="bx bx-calendar"></i>
+                        <span>{{ achievement.achievement_date|date:"d/m/Y" }}</span>
+                        {% else %}
+                        <i class="bx bx-time"></i>
+                        <span>{{ achievement.created_at|date:"d/m/Y" }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="achievement-actions" onclick="event.stopPropagation();">
+                        {% if achievement.created_by == request.user or request.user.is_superuser %}
+
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="bx bx-folder-open"></i>
+                </div>
+                <h4>لا توجد إنجازات حالياً</h4>
+                <p class="text-muted mb-4">
+                    {% if section_filter %}
+                    لا توجد إنجازات في هذا القسم، جرب تصفية قسم آخر
+                    {% else %}
+                    ابدأ بإضافة أول إنجاز للتقرير السنوي 2025
+                    {% endif %}
+                </p>
+                {% if not section_filter %}
+                <button type="button" class="btn btn-primary btn-lg" id="addFirstAchievementBtn">
+                    <i class="bx bx-plus-circle me-2"></i>
+                    إضافة أول إنجاز
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal for Achievement Form/Detail -->
+<div class="modal fade" id="achievementModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <!-- Content loaded via AJAX -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    const achievementModal = new bootstrap.Modal(document.getElementById('achievementModal'));
+    
+    // Helper function to get CSRF token
+    function getCsrfToken() {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'csrftoken') {
+                return decodeURIComponent(value);
+            }
+        }
+        return $('[name=csrfmiddlewaretoken]').val();
+    }
+    
+    // Add Achievement
+    $('#addAchievementBtn, #addFirstAchievementBtn').on('click', function() {
+        loadAchievementModal('{% url "annualreport:create" %}');
+    });
+    
+    // View Achievement Detail
+    $('.achievement-card').on('click', function(e) {
+        if ($(e.target).closest('.achievement-actions').length === 0) {
+            const achievementId = $(this).data('achievement-id');
+            loadAchievementModal(`/annual-report/${achievementId}/`);
+        }
+    });
+    
+    // Edit Achievement
+    $(document).on('click', '.edit-achievement-btn', function(e) {
+        e.stopPropagation();
+        const achievementId = $(this).data('achievement-id');
+        loadAchievementModal(`/annual-report/${achievementId}/edit/`);
+    });
+    
+    // Delete Achievement
+    $(document).on('click', '.delete-achievement-btn', function(e) {
+        e.stopPropagation();
+        const achievementId = $(this).data('achievement-id');
+        const achievementTitle = $(this).data('achievement-title');
+        
+        if (confirm(`هل أنت متأكد من حذف الإنجاز "${achievementTitle}"؟\n\nلن يمكن التراجع عن هذا الإجراء.`)) {
+            deleteAchievement(achievementId);
+        }
+    });
+    
+    // Handle Form Submission
+    $(document).on('submit', '#achievementForm', function(e) {
+        e.preventDefault();
+        
+        const form = $(this);
+        const formData = form.serialize();
+        const url = form.attr('action');
+        const submitBtn = form.find('button[type="submit"]');
+        const btnText = submitBtn.html();
+        
+        // Disable submit button
+        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>جاري الحفظ...');
+        
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCsrfToken()
+            },
+            success: function(response) {
+                if (response.success) {
+                    showToast('success', response.message);
+                    achievementModal.hide();
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showToast('error', 'حدث خطأ أثناء الحفظ');
+                }
+            },
+            error: function(xhr) {
+                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    displayFormErrors(xhr.responseJSON.errors);
+                } else {
+                    showToast('error', 'حدث خطأ أثناء الحفظ');
+                }
+                submitBtn.prop('disabled', false).html(btnText);
+            }
+        });
+    });
+    
+    // Load Modal Content
+    function loadAchievementModal(url) {
+        const modalContent = $('#achievementModal .modal-content');
+        
+        modalContent.html(`
+            <div class="modal-body text-center py-5">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">جاري التحميل...</span>
+                </div>
+                <p class="text-muted">جاري تحميل البيانات...</p>
+            </div>
+        `);
+        
+        achievementModal.show();
+        
+        $.ajax({
+            url: url,
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCsrfToken()
+            },
+            success: function(response) {
+                modalContent.html(response);
+            },
+            error: function() {
+                modalContent.html(`
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger">خطأ</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center py-5">
+                        <i class="bx bx-error-circle text-danger" style="font-size: 4rem;"></i>
+                        <h6 class="mt-3">حدث خطأ أثناء تحميل البيانات</h6>
+                        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">إغلاق</button>
+                    </div>
+                `);
+            }
+        });
+    }
+    
+    // Delete Achievement
+    function deleteAchievement(achievementId) {
+        $.ajax({
+            url: `/annual-report/${achievementId}/delete/`,
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCsrfToken()
+            },
+            success: function(response) {
+                if (response.success) {
+                    showToast('success', response.message);
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showToast('error', response.error || 'حدث خطأ أثناء الحذف');
+                }
+            },
+            error: function(xhr) {
+                const error = xhr.responseJSON?.error || 'حدث خطأ أثناء الحذف';
+                showToast('error', error);
+            }
+        });
+    }
+    
+    // Display Form Errors
+    function displayFormErrors(errors) {
+        $('.invalid-feedback').remove();
+        $('.is-invalid').removeClass('is-invalid');
+        
+        for (const [field, messages] of Object.entries(errors)) {
+            const input = $(`[name="${field}"]`);
+            if (input.length) {
+                input.addClass('is-invalid');
+                const errorHtml = `<div class="invalid-feedback">${messages.join(', ')}</div>`;
+                input.after(errorHtml);
+            }
+        }
+    }
+    
+    // Show Toast Notification
+    function showToast(type, message) {
+        const toast = $(`
+            <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+                <div class="toast show bg-${type === 'success' ? 'success' : 'danger'} text-white" role="alert">
+                    <div class="toast-body d-flex align-items-center gap-2">
+                        <i class="bx ${type === 'success' ? 'bx-check-circle' : 'bx-error-circle'} fs-5"></i>
+                        <span>${message}</span>
+                    </div>
+                </div>
+            </div>
+        `);
+        
+        $('body').append(toast);
+        
+        setTimeout(() => {
+            toast.fadeOut(300, function() {
+                $(this).remove();
+            });
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}

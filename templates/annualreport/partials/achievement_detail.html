@@ -1,0 +1,131 @@
+<div class="modal-header">
+    <h5 class="modal-title">
+        <i class="bx bx-trophy me-2"></i>
+        تفاصيل الإنجاز
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+</div>
+
+<div class="modal-body">
+    <!-- Section Badge -->
+    <div class="mb-3">
+        <span class="achievement-section-badge section-{{ achievement.section }}">
+            {{ achievement.get_section_display }}
+        </span>
+    </div>
+
+    <!-- Title -->
+    <h3 class="mb-3">{{ achievement.title }}</h3>
+
+    <!-- Description -->
+    <div class="mb-4">
+        <h6 class="text-muted mb-2">الوصف:</h6>
+        <p style="white-space: pre-wrap; line-height: 1.8;">{{ achievement.description }}</p>
+    </div>
+
+    <!-- Date -->
+    {% if achievement.achievement_date %}
+    <div class="mb-3">
+        <h6 class="text-muted mb-2">
+            <i class="bx bx-calendar me-1"></i>
+            تاريخ الإنجاز:
+        </h6>
+        <p class="mb-0">{{ achievement.achievement_date|date:"d/m/Y" }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Links -->
+    {% if achievement.links.exists %}
+    <div class="mb-3">
+        <h6 class="text-muted mb-2">
+            <i class="bx bx-link me-1"></i>
+            الروابط والمرفقات:
+        </h6>
+        <div class="list-group">
+            {% for link in achievement.links.all %}
+            <a href="{{ link.link_url }}" 
+               target="_blank" 
+               class="list-group-item list-group-item-action d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bx bx-link-external"></i>
+                    <span>{{ link.link_title|default:link.link_url }}</span>
+                </div>
+                <i class="bx bx-chevron-left"></i>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Display Status -->
+    <div class="mb-3">
+        <h6 class="text-muted mb-2">
+            <i class="bx bx-show me-1"></i>
+            حالة العرض:
+        </h6>
+        {% if achievement.display_in_report %}
+        <span class="badge bg-success">
+            <i class="bx bx-check-circle me-1"></i>
+            يظهر في التقرير السنوي
+        </span>
+        {% else %}
+        <span class="badge bg-secondary">
+            <i class="bx bx-hide me-1"></i>
+            مخفي من التقرير السنوي
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- Metadata -->
+    <div class="border-top pt-3 mt-4">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <small class="text-muted d-block mb-1">تم الإنشاء بواسطة:</small>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bx bx-user-circle text-primary"></i>
+                    <strong>{{ achievement.created_by.get_full_name }}</strong>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <small class="text-muted d-block mb-1">تاريخ الإنشاء:</small>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bx bx-time text-primary"></i>
+                    <strong>{{ achievement.created_at|date:"d/m/Y - h:i A" }}</strong>
+                </div>
+            </div>
+            {% if achievement.updated_at != achievement.created_at %}
+            <div class="col-12">
+                <small class="text-muted d-block mb-1">آخر تحديث:</small>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bx bx-edit text-primary"></i>
+                    <strong>{{ achievement.updated_at|date:"d/m/Y - h:i A" }}</strong>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+        <i class="bx bx-x me-1"></i>
+        إغلاق
+    </button>
+    
+    {% if achievement.created_by == request.user or request.user.is_superuser %}
+    <button type="button" class="btn btn-primary edit-achievement-btn" 
+            data-achievement-id="{{ achievement.pk }}">
+        <i class="bx bx-edit me-1"></i>
+        تعديل
+    </button>
+    {% endif %}
+    
+    {% if achievement.created_by == request.user or request.user.is_superuser %}
+    <button type="button" class="btn btn-danger delete-achievement-btn" 
+            data-achievement-id="{{ achievement.pk }}"
+            data-achievement-title="{{ achievement.title }}">
+        <i class="bx bx-trash me-1"></i>
+        حذف
+    </button>
+    {% endif %}
+</div>
